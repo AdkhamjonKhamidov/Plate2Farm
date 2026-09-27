@@ -16,10 +16,11 @@ Plate2Farm connects food providers with nearby farmers. Providers post surplus f
    1. [`supabase/migrations/20260926220000_initial_leftover_schema.sql`](supabase/migrations/20260926220000_initial_leftover_schema.sql)
    2. [`supabase/migrations/20260927010000_validate_profile_and_listing_inputs.sql`](supabase/migrations/20260927010000_validate_profile_and_listing_inputs.sql)
    3. [`supabase/migrations/20260927020000_add_listing_pickup_radius.sql`](supabase/migrations/20260927020000_add_listing_pickup_radius.sql)
+   4. [`supabase/migrations/20260927030000_create_profiles_on_email_confirmation.sql`](supabase/migrations/20260927030000_create_profiles_on_email_confirmation.sql)
 3. In **Project Settings > API**, copy the project URL and publishable key.
 4. In **Authentication > URL Configuration**, allow the redirect URL used by the app. The app uses the `leftover` scheme; local web testing also needs its local web origin allowed.
 
-The migrations create the account profiles, food listings, row-level security policies, and claim/cancel/complete operations. Existing listings get a default pickup radius of 25 miles.
+The migrations create the account profiles, food listings, row-level security policies, and claim/cancel/complete operations. For projects requiring email confirmation, the profile is created securely in the database when Supabase confirms the user's email; projects without confirmation enabled create it during signup. Existing listings get a default pickup radius of 25 miles.
 
 ## 2. Configure the app
 
@@ -52,13 +53,15 @@ Restart Expo after editing `.env`. Do not commit `.env`.
 
 ## 3. Install and start
 
+Start the mobile app with Expo from the `client` directory:
+
 ```powershell
 cd client
 npm install
-npx expo start
+npm run start:mobile
 ```
 
-Use the Expo terminal shortcuts to open web, Android, or iOS. On a physical iPhone, scan the QR code using Expo Go and ensure the phone and development computer can reach the same network.
+Scan the displayed QR code with Expo Go on your phone; the phone and development computer must be able to reach the same network. You can also start a platform directly with `npm run android` or `npm run ios` (the iOS simulator requires macOS). To run the web app instead, use `npm run web`.
 
 ## 4. Deploy the web app to Vercel
 
