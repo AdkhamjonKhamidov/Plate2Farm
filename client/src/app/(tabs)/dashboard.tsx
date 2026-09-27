@@ -8,6 +8,7 @@ import { FoodListingCard } from '@/components/food-listing-card';
 import { useAuth } from '@/providers/auth-provider';
 import type { FoodListing } from '@/lib/database.types';
 import { getAvailableListings, getProviderListings } from '@/lib/food-listings';
+import { DEMO_LISTINGS, isDemoSession } from '@/lib/demo-data';
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -24,9 +25,13 @@ export default function DashboardScreen() {
     setIsLoading(true);
     setNotice(null);
     try {
-      const results = isFarmer
-        ? await getAvailableListings()
-        : await getProviderListings(session.user.id);
+      const results = isDemoSession(session)
+        ? DEMO_LISTINGS.filter((listing) =>
+            isFarmer ? listing.status === 'available' : listing.posted_by === session.user.id,
+          )
+        : isFarmer
+          ? await getAvailableListings()
+          : await getProviderListings(session.user.id);
       setListings(results.slice(0, 3));
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'Unable to load your dashboard.');

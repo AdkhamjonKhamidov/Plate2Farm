@@ -20,6 +20,8 @@ import {
 } from '@/lib/database.types';
 import { claimFoodListing, getAvailableListings } from '@/lib/food-listings';
 import { getDistanceMiles, type MapCoordinate } from '@/lib/geo';
+import { DEMO_LISTINGS, isDemoSession } from '@/lib/demo-data';
+import { useAuth } from '@/providers/auth-provider';
 
 const categories: Array<{ label: string; value: FoodCategory | 'all' }> = [
   { label: 'All supplies', value: 'all' },
@@ -36,6 +38,7 @@ const radiusOptions: Array<{ label: string; value: PickupRadiusMiles | null }> =
 ];
 
 export default function ExploreScreen() {
+  const { session } = useAuth();
   const [listings, setListings] = useState<FoodListing[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<FoodCategory | 'all'>('all');
   const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
@@ -54,13 +57,17 @@ export default function ExploreScreen() {
     setIsLoading(true);
     setError(null);
     try {
-      setListings(await getAvailableListings());
+      setListings(
+        isDemoSession(session)
+          ? DEMO_LISTINGS.filter((listing) => listing.status === 'available')
+          : await getAvailableListings(),
+      );
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Unable to load local supplies.');
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [session]);
 
   useFocusEffect(
     useCallback(() => {
@@ -163,9 +170,17 @@ export default function ExploreScreen() {
     setNotice(null);
     setError(null);
     try {
-      await claimFoodListing(listingId);
+      if (!isDemoSession(session)) {
+        await claimFoodListing(listingId);
+      }
       setNotice('Pickup saved. You can find it in My pickups.');
-      await loadListings();
+      if (isDemoSession(session)) {
+        setListings((current) =>
+          current.filter((listing) => listing.id !== listingId),
+        );
+      } else {
+        await loadListings();
+      }
     } catch (claimError) {
       setError(
         claimError instanceof Error ? claimError.message : 'Unable to reserve this pickup.',

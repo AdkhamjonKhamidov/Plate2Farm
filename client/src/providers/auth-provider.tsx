@@ -4,6 +4,7 @@ import { AppState, Platform } from 'react-native';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import type { Profile } from '@/lib/database.types';
+import { getDemoAccount } from '@/lib/demo-data';
 import { getProfile, updateProfile as saveProfile } from '@/lib/food-listings';
 import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase';
 import type { SignUpInput } from '@/lib/validation';
@@ -219,6 +220,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       callbackError,
       authEvent,
       signIn: async (email, password) => {
+        const demoAccount = getDemoAccount(email, password);
+        if (demoAccount) {
+          const now = Math.floor(Date.now() / 1000);
+          const demoSession: Session = {
+            access_token: `demo-${demoAccount.profile.id}`,
+            refresh_token: `demo-${demoAccount.profile.id}`,
+            expires_in: 60 * 60 * 24,
+            expires_at: now + 60 * 60 * 24,
+            token_type: 'bearer',
+            user: {
+              id: demoAccount.profile.id,
+              aud: 'authenticated',
+              role: 'authenticated',
+              email: demoAccount.email,
+              phone: '',
+              app_metadata: { provider: 'demo' },
+              user_metadata: {},
+              identities: [],
+              created_at: demoAccount.profile.created_at,
+              updated_at: demoAccount.profile.updated_at,
+            },
+          };
+          setSession(demoSession);
+          setProfile(demoAccount.profile);
+          setProfileError(null);
+          setIsLoading(false);
+          return;
+        }
         const { error } = await getSupabaseClient().auth.signInWithPassword({
           email: normalizeEmail(email),
           password,
@@ -257,6 +286,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       },
       signOut: async () => {
+        if (session?.user.app_metadata.provider === 'demo') {
+          setSession(null);
+          setProfile(null);
+          setProfileError(null);
+          return;
+        }
         const { error } = await getSupabaseClient().auth.signOut();
         if (error) {
           throw error;

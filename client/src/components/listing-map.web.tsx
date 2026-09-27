@@ -96,7 +96,7 @@ function ListingMapContents({
           title={`${listing.title} · ${listing.provider_name}`}
           onClick={() => onSelect?.(listing)}
           icon={{
-            path: google.maps.SymbolPath.CIRCLE,
+            path: 'M 0,-1 A 1,1 0 1,0 0,1 A 1,1 0 1,0 0,-1 Z',
             scale: listing.id === selectedListingId ? 12 : 10,
             fillColor:
               listing.id === selectedListingId

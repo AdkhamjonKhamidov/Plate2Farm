@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BrandMark } from '@/components/brand-mark';
 import { BRAND_NAME, BRAND_TAGLINE } from '@/constants/brand';
 import { useAuth } from '@/providers/auth-provider';
+import { DEMO_ACCOUNTS } from '@/lib/demo-data';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { validateEmail, validateSignUp } from '@/lib/validation';
 
@@ -39,6 +40,20 @@ export default function AuthScreen() {
   const { signIn, signUp, sendPasswordReset } = useAuth();
   const isSignUp = mode === 'signUp';
   const isResetPassword = mode === 'resetPassword';
+
+  const useDemoAccount = async (account: (typeof DEMO_ACCOUNTS)[number]) => {
+    setIsSubmitting(true);
+    setNotice('');
+    try {
+      await signIn(account.email, account.password);
+      router.replace('/(tabs)');
+    } catch (error) {
+      setNoticeKind('error');
+      setNotice(error instanceof Error ? error.message : 'Unable to open the demo account.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const selectMode = (nextMode: AuthMode) => {
     setMode(nextMode);
@@ -344,7 +359,7 @@ export default function AuthScreen() {
               )}
               {!isSupabaseConfigured() ? (
                 <Text style={styles.errorNotice}>
-                  Add your Supabase URL and publishable key to client/.env to enable account access.
+                  Supabase is not configured. Use a demo account below for the presentation.
                 </Text>
               ) : null}
               {notice ? (
@@ -373,6 +388,32 @@ export default function AuthScreen() {
                 </Text>
                 <Text style={styles.buttonArrow}>→</Text>
               </Pressable>
+              {!isSignUp && !isResetPassword ? (
+                <View style={styles.demoPanel}>
+                  <Text style={styles.demoTitle}>Presentation accounts</Text>
+                  <Text style={styles.demoHelp}>
+                    Use either role to walk through the idea without a backend.
+                  </Text>
+                  {DEMO_ACCOUNTS.map((account) => (
+                    <Pressable
+                      key={account.email}
+                      accessibilityRole="button"
+                      disabled={isSubmitting}
+                      onPress={() => void useDemoAccount(account)}
+                      style={styles.demoButton}>
+                      <View>
+                        <Text style={styles.demoButtonTitle}>
+                          {account.profile.account_type === 'farmer' ? 'Farmer view' : 'Provider view'}
+                        </Text>
+                        <Text style={styles.demoButtonText}>
+                          {account.email} · {account.password}
+                        </Text>
+                      </View>
+                      <Text style={styles.demoArrow}>→</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              ) : null}
               {isResetPassword && (
                 <Pressable
                   accessibilityRole="button"
@@ -603,6 +644,48 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     color: '#FFFFFF',
     fontSize: 15,
+    fontWeight: '700',
+  },
+  demoPanel: {
+    gap: 9,
+    marginTop: 8,
+    padding: 14,
+    borderRadius: 18,
+    backgroundColor: '#EBF0E4',
+  },
+  demoTitle: {
+    color: '#253B2B',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  demoHelp: {
+    color: '#687166',
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  demoButton: {
+    minHeight: 54,
+    paddingHorizontal: 13,
+    paddingVertical: 9,
+    borderRadius: 13,
+    backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  demoButtonTitle: {
+    color: '#365D3D',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  demoButtonText: {
+    color: '#687166',
+    fontSize: 11,
+    marginTop: 2,
+  },
+  demoArrow: {
+    color: '#365D3D',
+    fontSize: 19,
     fontWeight: '700',
   },
   buttonArrow: {

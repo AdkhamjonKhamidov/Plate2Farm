@@ -7,6 +7,7 @@ import { FoodListingCard } from '@/components/food-listing-card';
 import ListingMap from '@/components/listing-map';
 import { cancelFoodListing, getProviderListings } from '@/lib/food-listings';
 import type { FoodListing } from '@/lib/database.types';
+import { DEMO_LISTINGS, isDemoSession } from '@/lib/demo-data';
 import { useAuth } from '@/providers/auth-provider';
 
 export default function ProviderListingsScreen() {
@@ -26,7 +27,11 @@ export default function ProviderListingsScreen() {
     setIsLoading(true);
     setError(null);
     try {
-      setListings(await getProviderListings(session.user.id));
+      setListings(
+        isDemoSession(session)
+          ? DEMO_LISTINGS.filter((listing) => listing.posted_by === session.user.id)
+          : await getProviderListings(session.user.id),
+      );
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Unable to load your listings.');
     } finally {
@@ -45,9 +50,19 @@ export default function ProviderListingsScreen() {
     setError(null);
     setNotice(null);
     try {
-      await cancelFoodListing(listingId);
+      if (!isDemoSession(session)) {
+        await cancelFoodListing(listingId);
+      }
       setNotice('Listing cancelled.');
-      await loadListings();
+      if (isDemoSession(session)) {
+        setListings((current) =>
+          current.map((listing) =>
+            listing.id === listingId ? { ...listing, status: 'cancelled' } : listing,
+          ),
+        );
+      } else {
+        await loadListings();
+      }
     } catch (cancelError) {
       setError(cancelError instanceof Error ? cancelError.message : 'Unable to cancel listing.');
     } finally {

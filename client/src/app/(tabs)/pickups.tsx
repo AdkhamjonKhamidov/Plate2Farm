@@ -8,6 +8,7 @@ import ListingMap from '@/components/listing-map';
 import { useAuth } from '@/providers/auth-provider';
 import type { FoodListing } from '@/lib/database.types';
 import { completeFoodPickup, getFarmerPickups } from '@/lib/food-listings';
+import { DEMO_LISTINGS, isDemoSession } from '@/lib/demo-data';
 
 export default function PickupsScreen() {
   const { session } = useAuth();
@@ -25,7 +26,11 @@ export default function PickupsScreen() {
     setIsLoading(true);
     setError(null);
     try {
-      setListings(await getFarmerPickups(session.user.id));
+      setListings(
+        isDemoSession(session)
+          ? DEMO_LISTINGS.filter((listing) => listing.claimed_by === session.user.id)
+          : await getFarmerPickups(session.user.id),
+      );
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Unable to load your pickups.');
     } finally {
@@ -44,9 +49,21 @@ export default function PickupsScreen() {
     setNotice(null);
     setError(null);
     try {
-      await completeFoodPickup(listingId);
+      if (!isDemoSession(session)) {
+        await completeFoodPickup(listingId);
+      }
       setNotice('Pickup marked as collected. Thanks for rescuing good food!');
-      await loadPickups();
+      if (isDemoSession(session)) {
+        setListings((current) =>
+          current.map((listing) =>
+            listing.id === listingId
+              ? { ...listing, status: 'collected' }
+              : listing,
+          ),
+        );
+      } else {
+        await loadPickups();
+      }
     } catch (pickupError) {
       setError(
         pickupError instanceof Error ? pickupError.message : 'Unable to complete this pickup.',

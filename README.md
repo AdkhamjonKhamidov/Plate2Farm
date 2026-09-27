@@ -114,7 +114,19 @@ The script adds five clearly labeled listings near Columbus, Ohio, for each prov
 
 ## 6. Try both account types
 
-Use separate email addresses for the provider and farmer accounts. Confirm each email if Supabase requires it.
+For a hackathon presentation, the app includes two local demo accounts. They work without Supabase
+or a Google Maps key and load realistic example listings, a pickup, and provider data:
+
+| View | Email | Password |
+| --- | --- | --- |
+| Farmer | `farmer@plate2farm.demo` | `demo-farmer` |
+| Provider | `provider@plate2farm.demo` | `demo-provider` |
+
+Choose **Farmer view** or **Provider view** from the **Presentation accounts** panel on the sign-in
+screen. Demo changes such as claiming a pickup are kept in memory for that app session only.
+
+For the full backend flow, use separate email addresses for the provider and farmer accounts.
+Confirm each email if Supabase requires it.
 
 ### Provider
 
