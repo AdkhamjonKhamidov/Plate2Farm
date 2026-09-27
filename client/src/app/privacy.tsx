@@ -8,23 +8,23 @@ import { BRAND_NAME } from '@/constants/brand';
 const sections = [
   {
     title: 'About this notice',
-    body: 'This is a draft privacy notice for the Leftover app. Supabase authentication and database features are not connected yet, so this describes the data the app is designed to use once they are enabled. Review and update this notice, including a privacy contact and retention details, before public launch.',
+    body: 'Leftover uses Supabase for account authentication and its application database. Review and update this draft, including a monitored privacy contact and retention details, before public launch.',
   },
   {
     title: 'Account information',
-    body: 'When account creation is enabled, Supabase Auth will manage your email, password credentials, and sign-in session. Leftover plans to store your name, account type (farmer or food provider), organization name, and optional phone number in your profile. Passwords are managed by Supabase Auth and are not stored in the app profile.',
+    body: 'Supabase Auth manages your email, password credentials, and sign-in session. Leftover stores your name, account type (farmer or food provider), organization name, and optional phone number in your profile. Passwords are managed by Supabase Auth and are not stored in the app profile.',
   },
   {
     title: 'Food listings and location',
-    body: 'Food providers can post food descriptions, quantities, photos, pickup times, expiration dates, and pickup addresses with map coordinates. Active, unexpired listings and their exact pickup locations are visible to all signed-in farmer accounts so they can decide what to collect. A provider can view its own listings; farmers can view listings they have claimed.',
+    body: 'Food providers can post food descriptions, quantities, pickup times, pickup addresses, and map coordinates. Active, unexpired listings and their exact pickup locations are visible to signed-in farmer accounts so they can decide what to collect. A provider can view its own listings; farmers can view listings they have claimed.',
   },
   {
     title: 'How information is used',
-    body: 'Account and listing information is intended to support sign-in, show nearby food offers, coordinate pickups, and prevent multiple farmers from claiming the same offer. Location is used to place pickup offers on the map.',
+    body: 'Account and listing information supports sign-in, displays local food offers, coordinates pickups, and prevents multiple farmers from claiming the same offer. Pickup coordinates are shown on the Google Maps map so farmers can find collection locations.',
   },
   {
     title: 'Storage and service providers',
-    body: 'The planned database and authentication provider is Supabase. When connected, account and listing data will be processed and stored in the selected Supabase project and its configured region. Check the Supabase project settings and applicable Supabase terms before enabling real user data.',
+    body: 'Account and listing data is processed and stored in the selected Supabase project and its configured region. Maps are provided by Google Maps and map requests are subject to Google Maps Platform terms and privacy practices. Check both providers’ terms and configuration before enabling real user data.',
   },
   {
     title: 'Your choices and data requests',

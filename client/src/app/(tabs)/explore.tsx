@@ -1,180 +1,407 @@
-import { Image } from 'expo-image';
-import { SymbolView } from 'expo-symbols';
-import { Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useCallback, useMemo, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import {
+  ActivityIndicator,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
-import { ExternalLink } from '@/components/external-link';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Collapsible } from '@/components/ui/collapsible';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { Notice, PageHeading, Palette, Panel, PrimaryButton, Screen } from '@/components/app-ui';
+import { FoodListingCard } from '@/components/food-listing-card';
+import ListingMap from '@/components/listing-map';
+import {
+  PICKUP_RADIUS_OPTIONS,
+  type FoodCategory,
+  type FoodListing,
+  type PickupRadiusMiles,
+} from '@/lib/database.types';
+import { claimFoodListing, getAvailableListings } from '@/lib/food-listings';
+import { getDistanceMiles, type MapCoordinate } from '@/lib/geo';
+
+const categories: Array<{ label: string; value: FoodCategory | 'all' }> = [
+  { label: 'All supplies', value: 'all' },
+  { label: 'Produce', value: 'produce' },
+  { label: 'Dairy', value: 'dairy' },
+  { label: 'Bakery', value: 'bakery' },
+  { label: 'Prepared', value: 'prepared' },
+  { label: 'Pantry', value: 'pantry' },
+];
+
+const radiusOptions: Array<{ label: string; value: PickupRadiusMiles | null }> = [
+  { label: 'Any distance', value: null },
+  ...PICKUP_RADIUS_OPTIONS.map((radius) => ({ label: `${radius} mi`, value: radius })),
+];
 
 export default function ExploreScreen() {
-  const safeAreaInsets = useSafeAreaInsets();
-  const insets = {
-    ...safeAreaInsets,
-    bottom: safeAreaInsets.bottom + BottomTabInset + Spacing.three,
-  };
-  const theme = useTheme();
+  const [listings, setListings] = useState<FoodListing[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<FoodCategory | 'all'>('all');
+  const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
+  const [searchCenter, setSearchCenter] = useState<MapCoordinate | null>(null);
+  const [mapCenter, setMapCenter] = useState<MapCoordinate | null>(null);
+  const [searchRadiusMiles, setSearchRadiusMiles] = useState<PickupRadiusMiles | null>(25);
+  const [userLocationRequest, setUserLocationRequest] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLocating, setIsLocating] = useState(false);
+  const [isClaiming, setIsClaiming] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
-  const contentPlatformStyle = Platform.select({
-    android: {
-      paddingTop: insets.top,
-      paddingLeft: insets.left,
-      paddingRight: insets.right,
-      paddingBottom: insets.bottom,
+  const loadListings = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      setListings(await getAvailableListings());
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Unable to load local supplies.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadListings();
+    }, [loadListings]),
+  );
+
+  const filteredListings = useMemo(
+    () => {
+      const categoryListings =
+        selectedCategory === 'all'
+          ? listings
+          : listings.filter((listing) => listing.category === selectedCategory);
+
+      if (!searchCenter) {
+        return categoryListings;
+      }
+
+      return categoryListings.filter((listing) => {
+        const distance = getDistanceMiles(searchCenter, {
+          latitude: listing.pickup_latitude,
+          longitude: listing.pickup_longitude,
+        });
+        return (
+          distance <= listing.pickup_radius_miles &&
+          (searchRadiusMiles === null || distance <= searchRadiusMiles)
+        );
+      });
     },
-    web: {
-      paddingTop: Spacing.six,
-      paddingBottom: Spacing.four,
-    },
-  });
+    [listings, searchCenter, searchRadiusMiles, selectedCategory],
+  );
+
+  const handleMapCenterChange = useCallback((latitude: number, longitude: number) => {
+    setMapCenter({ latitude, longitude });
+  }, []);
+
+  const handleUserLocationFound = useCallback((latitude: number, longitude: number) => {
+    setSearchCenter({ latitude, longitude });
+    setIsLocating(false);
+    setLocationError(null);
+  }, []);
+
+  const handleUserLocationError = useCallback(() => {
+    setIsLocating(false);
+    setUserLocationRequest(0);
+    setLocationError(
+      'Could not get your location. Allow location access for this app in iPhone Settings, then try again.',
+    );
+  }, []);
+
+  const useMapCenter = () => {
+    setLocationError(null);
+    setIsLocating(false);
+    setUserLocationRequest(0);
+    if (!mapCenter) {
+      setLocationError('Move the map to your area, then try setting the search center again.');
+      return;
+    }
+    setSearchCenter(mapCenter);
+  };
+
+  const setSearchArea = () => {
+    setLocationError(null);
+    if (Platform.OS !== 'web') {
+      useMapCenter();
+      return;
+    }
+
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setLocationError('Location is not available in this browser. Allow location access or use another browser.');
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setSearchCenter({ latitude: coords.latitude, longitude: coords.longitude });
+        setIsLocating(false);
+      },
+      (positionError) => {
+        setLocationError(
+          positionError.code === positionError.PERMISSION_DENIED
+            ? 'Location access was denied. Allow it in your browser settings or use another search area.'
+            : 'Unable to get your location. Check your connection and try again.',
+        );
+        setIsLocating(false);
+      },
+      { enableHighAccuracy: false, maximumAge: 60_000, timeout: 12_000 },
+    );
+  };
+
+  const requestNativeLocation = () => {
+    setLocationError(null);
+    setIsLocating(true);
+    setUserLocationRequest((request) => request + 1);
+  };
+
+  const claim = async (listingId: string) => {
+    setIsClaiming(listingId);
+    setNotice(null);
+    setError(null);
+    try {
+      await claimFoodListing(listingId);
+      setNotice('Pickup saved. You can find it in My pickups.');
+      await loadListings();
+    } catch (claimError) {
+      setError(
+        claimError instanceof Error ? claimError.message : 'Unable to reserve this pickup.',
+      );
+    } finally {
+      setIsClaiming(null);
+    }
+  };
 
   return (
-    <ScrollView
-      style={[styles.scrollView, { backgroundColor: theme.background }]}
-      contentInset={insets}
-      contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
-      <ThemedView style={styles.container}>
-        <ThemedView style={styles.titleContainer}>
-          <ThemedText type="subtitle">Explore</ThemedText>
-          <ThemedText style={styles.centerText} themeColor="textSecondary">
-            This starter app includes example{'\n'}code to help you get started.
-          </ThemedText>
+    <Screen>
+      <PageHeading
+        eyebrow="For farmers"
+        title="Discover local supplies"
+        subtitle="Explore available food and choose a pickup point that works for you."
+      />
 
-          <ExternalLink href="https://docs.expo.dev" asChild>
-            <Pressable style={({ pressed }) => pressed && styles.pressed}>
-              <ThemedView type="backgroundElement" style={styles.linkButton}>
-                <ThemedText type="link">Expo documentation</ThemedText>
-                <SymbolView
-                  tintColor={theme.text}
-                  name={{ ios: 'arrow.up.right.square', android: 'link', web: 'link' }}
-                  size={12}
-                />
-              </ThemedView>
+      <View style={styles.filters}>
+        {categories.map((category) => (
+          <Pressable
+            key={category.value}
+            accessibilityRole="button"
+            accessibilityState={{ selected: selectedCategory === category.value }}
+            onPress={() => setSelectedCategory(category.value)}
+            style={[
+              styles.filter,
+              selectedCategory === category.value && styles.filterSelected,
+            ]}>
+            <Text
+              style={[
+                styles.filterText,
+                selectedCategory === category.value && styles.filterTextSelected,
+              ]}>
+              {category.label}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      <Panel>
+        <Text style={styles.searchTitle}>Search by distance</Text>
+        <Text style={styles.searchHelp}>
+          {Platform.OS === 'web'
+            ? 'Use your location, or pan the map and search its center.'
+            : 'Move the map to your area, then use its center to search nearby.'}
+        </Text>
+        <View style={styles.searchButtons}>
+          {Platform.OS === 'web' ? (
+            <PrimaryButton disabled={isLocating} onPress={setSearchArea}>
+              {isLocating
+                ? 'Finding your location…'
+                : searchCenter
+                  ? 'Update my location'
+                  : 'Use my location'}
+            </PrimaryButton>
+          ) : null}
+          {Platform.OS === 'ios' ? (
+            <PrimaryButton disabled={isLocating} onPress={requestNativeLocation}>
+              {isLocating
+                ? 'Finding your location…'
+                : searchCenter
+                  ? 'Update my location'
+                  : 'Use my location'}
+            </PrimaryButton>
+          ) : null}
+          <PrimaryButton variant="secondary" onPress={useMapCenter}>
+            {searchCenter && Platform.OS !== 'web' ? 'Update search area' : 'Use map center'}
+          </PrimaryButton>
+        </View>
+        <View style={styles.filters}>
+          {radiusOptions.map((option) => (
+            <Pressable
+              key={option.label}
+              accessibilityRole="button"
+              accessibilityState={{ selected: searchRadiusMiles === option.value }}
+              onPress={() => setSearchRadiusMiles(option.value)}
+              style={[
+                styles.filter,
+                searchRadiusMiles === option.value && styles.filterSelected,
+              ]}>
+              <Text
+                style={[
+                  styles.filterText,
+                  searchRadiusMiles === option.value && styles.filterTextSelected,
+                ]}>
+                {option.label}
+              </Text>
             </Pressable>
-          </ExternalLink>
-        </ThemedView>
+          ))}
+        </View>
+        {searchCenter ? (
+          <Text style={styles.searchHelp}>
+            {searchRadiusMiles === null
+              ? 'Showing offers within each provider’s pickup area.'
+              : `Showing offers within ${searchRadiusMiles} miles of your search area and within each provider’s pickup area.`}
+          </Text>
+        ) : (
+          <Text style={styles.searchHelp}>
+            Set a search area to apply the selected distance.
+          </Text>
+        )}
+        {locationError ? <Text style={styles.locationError}>{locationError}</Text> : null}
+      </Panel>
 
-        <ThemedView style={styles.sectionsWrapper}>
-          <Collapsible title="File-based routing">
-            <ThemedText type="small">
-              This app has two screens: <ThemedText type="code">src/app/index.tsx</ThemedText> and{' '}
-              <ThemedText type="code">src/app/explore.tsx</ThemedText>
-            </ThemedText>
-            <ThemedText type="small">
-              The layout file in <ThemedText type="code">src/app/_layout.tsx</ThemedText> sets up
-              the tab navigator.
-            </ThemedText>
-            <ExternalLink href="https://docs.expo.dev/router/introduction">
-              <ThemedText type="linkPrimary">Learn more</ThemedText>
-            </ExternalLink>
-          </Collapsible>
+      {error ? <Notice>{error}</Notice> : null}
+      {notice ? <Notice tone="info">{notice}</Notice> : null}
+      <ListingMap
+        listings={filteredListings}
+        selectedListingId={selectedListingId}
+        onSelect={(listing) => setSelectedListingId(listing.id)}
+        searchCenter={searchCenter}
+        searchRadiusMiles={searchRadiusMiles}
+        showSelectedPickupRadius
+        onMapCenterChange={handleMapCenterChange}
+        userLocationRequest={userLocationRequest}
+        onUserLocationFound={handleUserLocationFound}
+        onUserLocationError={handleUserLocationError}
+      />
 
-          <Collapsible title="Android, iOS, and web support">
-            <ThemedView type="backgroundElement" style={styles.collapsibleContent}>
-              <ThemedText type="small">
-                You can open this project on Android, iOS, and the web. To open the web version,
-                press <ThemedText type="smallBold">w</ThemedText> in the terminal running this
-                project.
-              </ThemedText>
-              <Image
-                source={require('@/assets/images/tutorial-web.png')}
-                style={styles.imageTutorial}
-              />
-            </ThemedView>
-          </Collapsible>
+      <View style={styles.listHeading}>
+        <Text style={styles.sectionTitle}>Pickup options</Text>
+        <Text style={styles.count}>
+          {filteredListings.length} {filteredListings.length === 1 ? 'offer' : 'offers'} available
+        </Text>
+      </View>
 
-          <Collapsible title="Images">
-            <ThemedText type="small">
-              For static images, you can use the <ThemedText type="code">@2x</ThemedText> and{' '}
-              <ThemedText type="code">@3x</ThemedText> suffixes to provide files for different
-              screen densities.
-            </ThemedText>
-            <Image source={require('@/assets/images/react-logo.png')} style={styles.imageReact} />
-            <ExternalLink href="https://reactnative.dev/docs/images">
-              <ThemedText type="linkPrimary">Learn more</ThemedText>
-            </ExternalLink>
-          </Collapsible>
-
-          <Collapsible title="Light and dark mode components">
-            <ThemedText type="small">
-              This template has light and dark mode support. The{' '}
-              <ThemedText type="code">useColorScheme()</ThemedText> hook lets you inspect what the
-              user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-            </ThemedText>
-            <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-              <ThemedText type="linkPrimary">Learn more</ThemedText>
-            </ExternalLink>
-          </Collapsible>
-
-          <Collapsible title="Animations">
-            <ThemedText type="small">
-              This template includes an example of an animated component. The{' '}
-              <ThemedText type="code">src/components/ui/collapsible.tsx</ThemedText> component uses
-              the powerful <ThemedText type="code">react-native-reanimated</ThemedText> library to
-              animate opening this hint.
-            </ThemedText>
-          </Collapsible>
-        </ThemedView>
-        {Platform.OS === 'web' && <WebBadge />}
-      </ThemedView>
-    </ScrollView>
+      {isLoading ? (
+        <ActivityIndicator color={Palette.forest} />
+      ) : filteredListings.length ? (
+        filteredListings.map((listing) => (
+          <View key={listing.id} style={selectedListingId === listing.id && styles.selectedCard}>
+            <FoodListingCard listing={listing}>
+              <PrimaryButton
+                disabled={isClaiming === listing.id}
+                onPress={() => void claim(listing.id)}>
+                {isClaiming === listing.id ? 'Saving pickup…' : 'Reserve this pickup'}
+              </PrimaryButton>
+            </FoodListingCard>
+          </View>
+        ))
+      ) : (
+        <Panel>
+          <Text style={styles.emptyTitle}>No offers in this category</Text>
+          <Text style={styles.emptyText}>
+            {error
+              ? 'Check your connection and try loading the offers again.'
+              : searchCenter
+                ? searchRadiusMiles === null
+                  ? 'No offers are available inside their pickup areas here. Move the map to another area and update your search center.'
+                  : 'Try increasing your search radius or moving the map to another area.'
+                : selectedCategory === 'all'
+                  ? 'New local supplies will appear here when a provider posts them.'
+                  : 'Try another supply category to see available pickup options.'}
+          </Text>
+          {error ? (
+            <PrimaryButton variant="secondary" onPress={() => void loadListings()}>
+              Try again
+            </PrimaryButton>
+          ) : null}
+        </Panel>
+      )}
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollView: {
-    flex: 1,
-  },
-  contentContainer: {
+  filters: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
   },
-  container: {
-    maxWidth: MaxContentWidth,
-    flexGrow: 1,
+  filter: {
+    borderWidth: 1,
+    borderColor: '#DDE4D7',
+    borderRadius: 20,
+    paddingHorizontal: 13,
+    paddingVertical: 9,
+    backgroundColor: '#FFFFFF',
   },
-  titleContainer: {
-    gap: Spacing.three,
-    alignItems: 'center',
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.six,
+  filterSelected: {
+    backgroundColor: '#365D3D',
+    borderColor: '#365D3D',
   },
-  centerText: {
-    textAlign: 'center',
+  filterText: {
+    color: '#536151',
+    fontSize: 12,
+    fontWeight: '700',
   },
-  pressed: {
-    opacity: 0.7,
+  filterTextSelected: {
+    color: '#FFFFFF',
   },
-  linkButton: {
+  listHeading: {
     flexDirection: 'row',
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.five,
-    justifyContent: 'center',
-    gap: Spacing.one,
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  sectionsWrapper: {
-    gap: Spacing.five,
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.three,
+  sectionTitle: {
+    color: Palette.heading,
+    fontSize: 20,
+    fontWeight: '800',
   },
-  collapsibleContent: {
-    alignItems: 'center',
+  count: {
+    color: Palette.muted,
+    fontSize: 13,
   },
-  imageTutorial: {
-    width: '100%',
-    aspectRatio: 296 / 171,
-    borderRadius: Spacing.three,
-    marginTop: Spacing.two,
+  searchTitle: {
+    color: Palette.heading,
+    fontSize: 17,
+    fontWeight: '800',
   },
-  imageReact: {
-    width: 100,
-    height: 100,
-    alignSelf: 'center',
+  searchHelp: {
+    color: Palette.muted,
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  searchButtons: {
+    gap: 8,
+  },
+  locationError: {
+    color: Palette.error,
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  selectedCard: {
+    borderWidth: 2,
+    borderColor: '#86A95D',
+    borderRadius: 24,
+  },
+  emptyTitle: {
+    color: Palette.heading,
+    fontSize: 17,
+    fontWeight: '800',
+  },
+  emptyText: {
+    color: Palette.muted,
+    fontSize: 14,
+    lineHeight: 21,
   },
 });

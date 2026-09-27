@@ -14,6 +14,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BrandMark } from '@/components/brand-mark';
 import { BRAND_NAME, BRAND_TAGLINE } from '@/constants/brand';
+import { useAuth } from '@/providers/auth-provider';
+import { isSupabaseConfigured } from '@/lib/supabase';
+import { validateEmail, validateSignUp } from '@/lib/validation';
 
 type AuthMode = 'signIn' | 'signUp' | 'resetPassword';
 type AccountType = 'farmer' | 'provider';
@@ -27,6 +30,9 @@ export default function AuthScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [notice, setNotice] = useState('');
+  const [noticeKind, setNoticeKind] = useState<'error' | 'success'>('success');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { signIn, signUp, sendPasswordReset } = useAuth();
   const isSignUp = mode === 'signUp';
   const isResetPassword = mode === 'resetPassword';
 
@@ -35,12 +41,65 @@ export default function AuthScreen() {
     setNotice('');
   };
 
-  const handleSubmit = () => {
-    setNotice(
-      isResetPassword
-        ? 'Password recovery will be available once authentication is connected.'
-        : 'Account access will be available once authentication is connected.',
-    );
+  const handleSubmit = async () => {
+    setNotice('');
+    if (isSignUp) {
+      const validationError = validateSignUp({
+        accountType,
+        fullName,
+        organizationName,
+        email,
+        password,
+      });
+      if (validationError) {
+        setNoticeKind('error');
+        setNotice(validationError);
+        return;
+      }
+    } else {
+      if (!validateEmail(email)) {
+        setNoticeKind('error');
+        setNotice('Enter a valid email address.');
+        return;
+      }
+      if (!isResetPassword && (!password || password.length > 128)) {
+        setNoticeKind('error');
+        setNotice('Enter a password of 128 characters or fewer.');
+        return;
+      }
+    }
+
+    setIsSubmitting(true);
+    try {
+      if (isResetPassword) {
+        await sendPasswordReset(email);
+        setNoticeKind('success');
+        setNotice('If an account exists for this email, a password reset link is on its way.');
+      } else if (isSignUp) {
+        const result = await signUp({
+          accountType,
+          fullName,
+          organizationName,
+          email,
+          password,
+        });
+        if (result.needsEmailConfirmation) {
+          setMode('signIn');
+          setNoticeKind('success');
+          setNotice('Account created. Check your email to confirm your address, then sign in.');
+        } else {
+          router.replace('/(tabs)');
+        }
+      } else {
+        await signIn(email, password);
+        router.replace('/(tabs)');
+      }
+    } catch (error) {
+      setNoticeKind('error');
+      setNotice(error instanceof Error ? error.message : 'Unable to complete your request.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -154,6 +213,7 @@ export default function AuthScreen() {
                     accessibilityLabel="Full name"
                     autoComplete="name"
                     autoCapitalize="words"
+                    maxLength={80}
                     onChangeText={setFullName}
                     placeholder="Alex Green"
                     placeholderTextColor="#9AA095"
@@ -169,6 +229,7 @@ export default function AuthScreen() {
                   <TextInput
                     accessibilityLabel="Farm or organization name"
                     autoCapitalize="words"
+                    maxLength={120}
                     onChangeText={setOrganizationName}
                     placeholder="Your farm or business"
                     placeholderTextColor="#9AA095"
@@ -185,6 +246,7 @@ export default function AuthScreen() {
                   autoCapitalize="none"
                   autoCorrect={false}
                   keyboardType="email-address"
+                  maxLength={254}
                   onChangeText={setEmail}
                   placeholder="you@example.com"
                   placeholderTextColor="#9AA095"
@@ -200,6 +262,7 @@ export default function AuthScreen() {
                     accessibilityLabel="Password"
                     autoComplete={isSignUp ? 'new-password' : 'current-password'}
                     autoCapitalize="none"
+                    maxLength={128}
                     onChangeText={setPassword}
                     placeholder="Enter your password"
                     placeholderTextColor="#9AA095"
@@ -218,13 +281,34 @@ export default function AuthScreen() {
                   <Text style={styles.forgotPasswordText}>Forgot password?</Text>
                 </Pressable>
               )}
-              {notice ? <Text style={styles.notice}>{notice}</Text> : null}
+              {!isSupabaseConfigured() ? (
+                <Text style={styles.errorNotice}>
+                  Add your Supabase URL and publishable key to client/.env to enable account access.
+                </Text>
+              ) : null}
+              {notice ? (
+                <Text style={noticeKind === 'error' ? styles.errorNotice : styles.notice}>
+                  {notice}
+                </Text>
+              ) : null}
               <Pressable
                 accessibilityRole="button"
-                onPress={handleSubmit}
-                style={({ pressed }) => [styles.primaryButton, pressed && styles.buttonPressed]}>
+                accessibilityState={{ disabled: isSubmitting || !isSupabaseConfigured() }}
+                disabled={isSubmitting || !isSupabaseConfigured()}
+                onPress={() => void handleSubmit()}
+                style={({ pressed }) => [
+                  styles.primaryButton,
+                  pressed && styles.buttonPressed,
+                  (isSubmitting || !isSupabaseConfigured()) && styles.buttonDisabled,
+                ]}>
                 <Text style={styles.primaryButtonText}>
-                  {isResetPassword ? 'Send reset link' : isSignUp ? 'Create account' : 'Sign in'}
+                  {isSubmitting
+                    ? 'Please wait…'
+                    : isResetPassword
+                      ? 'Send reset link'
+                      : isSignUp
+                        ? 'Create account'
+                        : 'Sign in'}
                 </Text>
                 <Text style={styles.buttonArrow}>→</Text>
               </Pressable>
@@ -419,6 +503,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 19,
   },
+  errorNotice: {
+    color: '#A43F32',
+    fontSize: 13,
+    lineHeight: 19,
+  },
   primaryButton: {
     minHeight: 56,
     borderRadius: 18,
@@ -432,6 +521,9 @@ const styles = StyleSheet.create({
   buttonPressed: {
     opacity: 0.82,
     transform: [{ scale: 0.98 }],
+  },
+  buttonDisabled: {
+    opacity: 0.55,
   },
   primaryButtonText: {
     color: '#FFFFFF',
