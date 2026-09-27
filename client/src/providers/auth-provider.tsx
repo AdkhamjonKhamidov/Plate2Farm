@@ -32,6 +32,15 @@ function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : 'Something went wrong. Please try again.';
 }
 
+function createAuthCallbackUrl(mode?: 'recovery') {
+  const callbackUrl =
+    Platform.OS === 'web' && typeof window !== 'undefined'
+      ? new URL('/auth-callback', window.location.origin).toString()
+      : Linking.createURL('auth-callback');
+
+  return mode === 'recovery' ? `${callbackUrl}?mode=recovery` : callbackUrl;
+}
+
 async function consumeAuthUrl(url: string) {
   const client = getSupabaseClient();
   const queryString = url.split('?')[1]?.split('#')[0] ?? '';
@@ -219,7 +228,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       },
       signUp: async (input) => {
-        const emailRedirectTo = Linking.createURL('auth-callback');
+        const emailRedirectTo = createAuthCallbackUrl();
         const { data, error } = await getSupabaseClient().auth.signUp({
           email: normalizeEmail(input.email),
           password: input.password,
@@ -238,7 +247,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { needsEmailConfirmation: !data.session };
       },
       sendPasswordReset: async (email) => {
-        const emailRedirectTo = `${Linking.createURL('auth-callback')}?mode=recovery`;
+        const emailRedirectTo = createAuthCallbackUrl('recovery');
         const { error } = await getSupabaseClient().auth.resetPasswordForEmail(
           normalizeEmail(email),
           { redirectTo: emailRedirectTo },

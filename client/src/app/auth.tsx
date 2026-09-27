@@ -30,6 +30,9 @@ export default function AuthScreen() {
   const [accountType, setAccountType] = useState<AccountType>('farmer');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmation, setConfirmation] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const [notice, setNotice] = useState('');
   const [noticeKind, setNoticeKind] = useState<'error' | 'success'>('success');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,6 +43,8 @@ export default function AuthScreen() {
   const selectMode = (nextMode: AuthMode) => {
     setMode(nextMode);
     setNotice('');
+    setShowPassword(false);
+    setShowConfirmation(false);
   };
 
   const handleSubmit = async () => {
@@ -55,6 +60,11 @@ export default function AuthScreen() {
       if (validationError) {
         setNoticeKind('error');
         setNotice(validationError);
+        return;
+      }
+      if (password !== confirmation) {
+        setNoticeKind('error');
+        setNotice('The passwords do not match.');
         return;
       }
     } else {
@@ -86,6 +96,8 @@ export default function AuthScreen() {
         });
         if (result.needsEmailConfirmation) {
           setMode('signIn');
+          setShowPassword(false);
+          setShowConfirmation(false);
           setNoticeKind('success');
           setNotice('Account created. Check your email to confirm your address, then sign in.');
         } else {
@@ -264,7 +276,18 @@ export default function AuthScreen() {
               </View>
               {!isResetPassword && (
                 <View style={styles.fieldGroup}>
-                  <Text style={styles.label}>Password</Text>
+                  <View style={styles.fieldLabelRow}>
+                    <Text style={styles.label}>Password</Text>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                      onPress={() => setShowPassword((visible) => !visible)}
+                      style={styles.passwordVisibilityButton}>
+                      <Text style={styles.passwordVisibilityText}>
+                        {showPassword ? 'Hide' : 'Show'}
+                      </Text>
+                    </Pressable>
+                  </View>
                   <TextInput
                     accessibilityLabel="Password"
                     autoComplete={isSignUp ? 'new-password' : 'current-password'}
@@ -273,9 +296,40 @@ export default function AuthScreen() {
                     onChangeText={setPassword}
                     placeholder="Enter your password"
                     placeholderTextColor="#9AA095"
-                    secureTextEntry
+                    secureTextEntry={!showPassword}
                     textContentType={isSignUp ? 'newPassword' : 'password'}
                     value={password}
+                    style={styles.input}
+                  />
+                </View>
+              )}
+              {isSignUp && (
+                <View style={styles.fieldGroup}>
+                  <View style={styles.fieldLabelRow}>
+                    <Text style={styles.label}>Confirm password</Text>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={
+                        showConfirmation ? 'Hide confirmed password' : 'Show confirmed password'
+                      }
+                      onPress={() => setShowConfirmation((visible) => !visible)}
+                      style={styles.passwordVisibilityButton}>
+                      <Text style={styles.passwordVisibilityText}>
+                        {showConfirmation ? 'Hide' : 'Show'}
+                      </Text>
+                    </Pressable>
+                  </View>
+                  <TextInput
+                    accessibilityLabel="Confirm password"
+                    autoComplete="new-password"
+                    autoCapitalize="none"
+                    maxLength={128}
+                    onChangeText={setConfirmation}
+                    placeholder="Enter your password again"
+                    placeholderTextColor="#9AA095"
+                    secureTextEntry={!showConfirmation}
+                    textContentType="newPassword"
+                    value={confirmation}
                     style={styles.input}
                   />
                 </View>
@@ -483,6 +537,20 @@ const styles = StyleSheet.create({
   },
   label: {
     color: '#344333',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  fieldLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  passwordVisibilityButton: {
+    minHeight: 24,
+    justifyContent: 'center',
+  },
+  passwordVisibilityText: {
+    color: '#365D3D',
     fontSize: 13,
     fontWeight: '700',
   },
