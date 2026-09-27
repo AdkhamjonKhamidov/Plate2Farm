@@ -6,6 +6,7 @@ import {
   fieldStyles,
   Notice,
   PageHeading,
+  Palette,
   PrimaryButton,
   Screen,
 } from '@/components/app-ui';
@@ -61,7 +62,7 @@ export default function AuthCallbackScreen() {
       />
 
       {isLoading ? (
-        <ActivityIndicator color="#365D3D" />
+        <ActivityIndicator color={Palette.forest} />
       ) : isRecovery && session ? (
         <>
           <View style={fieldStyles.group}>
@@ -94,7 +95,9 @@ export default function AuthCallbackScreen() {
             {isSaving ? 'Updating…' : 'Update password'}
           </PrimaryButton>
           {notice ? (
-            <PrimaryButton onPress={() => router.replace('/(tabs)')}>Continue</PrimaryButton>
+            <PrimaryButton onPress={() => router.replace('/(tabs)/dashboard')}>
+              Continue
+            </PrimaryButton>
           ) : null}
         </>
       ) : callbackError ? (
@@ -116,7 +119,9 @@ export default function AuthCallbackScreen() {
               ? 'Your email is confirmed and you are signed in.'
               : 'Your account is ready.'}
           </Notice>
-          <PrimaryButton onPress={() => router.replace('/(tabs)')}>Continue to Leftover</PrimaryButton>
+          <PrimaryButton onPress={() => router.replace('/(tabs)/dashboard')}>
+            Continue to Leftover
+          </PrimaryButton>
         </>
       ) : (
         <>

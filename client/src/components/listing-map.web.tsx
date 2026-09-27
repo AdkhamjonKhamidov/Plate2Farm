@@ -2,8 +2,9 @@ import { APIProvider, Circle, Map, Marker, useMap } from '@vis.gl/react-google-m
 import { useCallback, useEffect, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { getSupplyPinColor, GOOGLE_MAP_STYLE } from '@/constants/map-style';
+import { Palette } from '@/components/app-ui';
 import type { ListingMapProps } from '@/components/listing-map.types';
+import { getSupplyPinColor, GOOGLE_MAP_STYLE } from '@/constants/map-style';
 
 const MAPS_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY?.trim();
 
@@ -66,9 +67,9 @@ function ListingMapContents({
         <Circle
           center={{ lat: searchCenter.latitude, lng: searchCenter.longitude }}
           radius={searchRadiusMiles * 1609.344}
-          fillColor="#5B8548"
+          fillColor={Palette.forest}
           fillOpacity={0.12}
-          strokeColor="#365D3D"
+          strokeColor={Palette.forest}
           strokeOpacity={0.7}
           strokeWeight={2}
           clickable={false}
@@ -100,7 +101,7 @@ function ListingMapContents({
             scale: listing.id === selectedListingId ? 12 : 10,
             fillColor:
               listing.id === selectedListingId
-                ? '#365D3D'
+                ? Palette.forest
                 : getSupplyPinColor(listing.category),
             fillOpacity: 1,
             strokeColor: '#FFFFFF',
@@ -161,7 +162,7 @@ const styles = StyleSheet.create({
     height: 300,
     overflow: 'hidden',
     borderRadius: 24,
-    backgroundColor: '#E8EDDF',
+    backgroundColor: Palette.backgroundElement,
   },
   map: {
     width: '100%',
@@ -173,15 +174,15 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: 24,
     borderRadius: 24,
-    backgroundColor: '#E8EDDF',
+    backgroundColor: Palette.backgroundElement,
   },
   missingTitle: {
-    color: '#253B2B',
+    color: Palette.heading,
     fontSize: 16,
     fontWeight: '800',
   },
   missingText: {
-    color: '#687166',
+    color: Palette.muted,
     fontSize: 13,
     lineHeight: 20,
   },

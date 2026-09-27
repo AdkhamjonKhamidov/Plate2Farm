@@ -154,8 +154,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   selectedCard: {
+    width: '100%',
+    maxWidth: 460,
+    alignSelf: 'center',
     borderWidth: 2,
-    borderColor: '#86A95D',
+    borderColor: Palette.primarySoft,
     borderRadius: 24,
   },
   status: {

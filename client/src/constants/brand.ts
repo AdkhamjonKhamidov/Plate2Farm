@@ -3,8 +3,8 @@ import type { ImageSourcePropType } from 'react-native';
 export const BRAND_NAME = 'Leftover';
 export const BRAND_TAGLINE = 'Leftovers, made good.';
 
-// Add a logo under assets/branding and point this at it, or provide a remote image source.
-export const BRAND_LOGO: ImageSourcePropType | undefined = undefined;
+export const BRAND_LOGO: ImageSourcePropType =
+  require('../../assets/images/main_logo1.png');
 
 // Use a remote URI or a static require('@/assets/branding/hero.jpg') for a bundled image.
 export const BRAND_IMAGES = {

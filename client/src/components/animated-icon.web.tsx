@@ -1,6 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 import Animated, { Keyframe, Easing } from 'react-native-reanimated';
 
+import { Palette } from '@/components/app-ui';
 import { BrandMark } from '@/components/brand-mark';
 
 const DURATION = 300;
@@ -66,7 +67,7 @@ const styles = StyleSheet.create({
     width: 104,
     height: 104,
     borderRadius: 32,
-    backgroundColor: '#E5EFD9',
+    backgroundColor: Palette.primarySoft,
     position: 'absolute',
   },
 });

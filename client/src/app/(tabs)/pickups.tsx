@@ -135,13 +135,16 @@ export default function PickupsScreen() {
 
 const styles = StyleSheet.create({
   status: {
-    color: '#597445',
+    color: Palette.forest,
     fontSize: 13,
     fontWeight: '800',
   },
   selectedCard: {
+    width: '100%',
+    maxWidth: 460,
+    alignSelf: 'center',
     borderWidth: 2,
-    borderColor: '#86A95D',
+    borderColor: Palette.primarySoft,
     borderRadius: 24,
   },
   emptyTitle: {

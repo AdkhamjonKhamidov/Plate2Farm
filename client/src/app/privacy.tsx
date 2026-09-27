@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Palette } from '@/components/app-ui';
 import { BrandMark } from '@/components/brand-mark';
 import { BRAND_NAME } from '@/constants/brand';
 
@@ -79,7 +80,7 @@ export default function PrivacyScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8F8F1',
+    backgroundColor: Palette.background,
   },
   content: {
     flexGrow: 1,
@@ -98,11 +99,11 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#EBF0E4',
+    backgroundColor: Palette.softGreen,
     marginBottom: 20,
   },
   backButtonText: {
-    color: '#365D3D',
+    color: Palette.forest,
     fontSize: 28,
     lineHeight: 30,
     fontWeight: '500',
@@ -117,25 +118,25 @@ const styles = StyleSheet.create({
     height: 42,
     width: 42,
     borderRadius: 15,
-    backgroundColor: '#E5EFD9',
+    backgroundColor: Palette.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
   brandName: {
-    color: '#253B2B',
+    color: Palette.heading,
     fontSize: 21,
     fontWeight: '800',
     letterSpacing: -0.5,
   },
   title: {
-    color: '#253B2B',
+    color: Palette.heading,
     fontSize: 34,
     lineHeight: 40,
     fontWeight: '800',
     letterSpacing: -1,
   },
   updated: {
-    color: '#7C8277',
+    color: Palette.muted,
     fontSize: 14,
     marginTop: 8,
     marginBottom: 28,
@@ -145,13 +146,13 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   sectionTitle: {
-    color: '#344333',
+    color: Palette.text,
     fontSize: 19,
     lineHeight: 25,
     fontWeight: '700',
   },
   body: {
-    color: '#596255',
+    color: Palette.muted,
     fontSize: 16,
     lineHeight: 25,
   },

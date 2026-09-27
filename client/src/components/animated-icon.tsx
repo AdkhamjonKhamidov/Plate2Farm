@@ -4,6 +4,7 @@ import { Dimensions, StyleSheet, View } from 'react-native';
 import Animated, { Easing, Keyframe } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
+import { Palette } from '@/components/app-ui';
 import { BrandMark } from '@/components/brand-mark';
 
 const INITIAL_SCALE_FACTOR = Dimensions.get('screen').height / 90;
@@ -112,14 +113,14 @@ const styles = StyleSheet.create({
   },
   background: {
     borderRadius: 32,
-    backgroundColor: '#E5EFD9',
+    backgroundColor: Palette.primarySoft,
     width: 104,
     height: 104,
     position: 'absolute',
   },
   splashOverlay: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: '#F8F8F1',
+    backgroundColor: Palette.background,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1000,

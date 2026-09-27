@@ -2,8 +2,9 @@ import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import Constants, { AppOwnership } from 'expo-constants';
 import { Platform, StyleSheet, View } from 'react-native';
 
-import { GOOGLE_MAP_STYLE } from '@/constants/map-style';
+import { Palette } from '@/components/app-ui';
 import type { LocationPickerProps } from '@/components/listing-map.types';
+import { GOOGLE_MAP_STYLE } from '@/constants/map-style';
 
 const PLATFORM_MAPS_KEY =
   Platform.OS === 'ios'
@@ -38,7 +39,7 @@ export default function LocationPicker({
           )
         }
         style={styles.map}>
-        {selectedCoordinate ? <Marker coordinate={selectedCoordinate} pinColor="#365D3D" /> : null}
+        {selectedCoordinate ? <Marker coordinate={selectedCoordinate} pinColor={Palette.forest} /> : null}
       </MapView>
     </View>
   );
@@ -50,7 +51,7 @@ const styles = StyleSheet.create({
     height: 240,
     overflow: 'hidden',
     borderRadius: 22,
-    backgroundColor: '#E8EDDF',
+    backgroundColor: Palette.backgroundElement,
   },
   map: {
     flex: 1,

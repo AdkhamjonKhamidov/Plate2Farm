@@ -1,6 +1,7 @@
 import { Redirect, Tabs } from 'expo-router';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { Palette } from '@/components/app-ui';
 import { useAuth } from '@/providers/auth-provider';
 
 export default function TabsLayout() {
@@ -9,7 +10,7 @@ export default function TabsLayout() {
   if (isLoading) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator color="#365D3D" />
+        <ActivityIndicator color={Palette.forest} />
         <Text style={styles.loadingText}>Loading your account…</Text>
       </View>
     );
@@ -40,8 +41,8 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#365D3D',
-        tabBarInactiveTintColor: '#7C8277',
+        tabBarActiveTintColor: Palette.forest,
+        tabBarInactiveTintColor: Palette.muted,
         tabBarStyle: styles.tabBar,
         tabBarLabelStyle: styles.tabLabel,
       }}>
@@ -62,7 +63,6 @@ export default function TabsLayout() {
         options={{ title: 'My listings', href: isFarmer ? null : undefined }}
       />
       <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
-      <Tabs.Screen name="index" options={{ href: null }} />
     </Tabs>
   );
 }
@@ -74,14 +74,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 28,
     gap: 14,
-    backgroundColor: '#F8F8F1',
+    backgroundColor: Palette.background,
   },
   loadingText: {
-    color: '#687166',
+    color: Palette.muted,
     fontSize: 15,
   },
   errorText: {
-    color: '#A43F32',
+    color: Palette.error,
     fontSize: 15,
     lineHeight: 22,
     textAlign: 'center',
@@ -90,13 +90,13 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   retryText: {
-    color: '#365D3D',
+    color: Palette.forest,
     fontSize: 15,
     fontWeight: '700',
   },
   tabBar: {
-    backgroundColor: '#F8F8F1',
-    borderTopColor: '#E0E5DA',
+    backgroundColor: Palette.background,
+    borderTopColor: Palette.border,
   },
   tabLabel: {
     fontSize: 11,

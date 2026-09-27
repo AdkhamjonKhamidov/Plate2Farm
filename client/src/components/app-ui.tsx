@@ -6,19 +6,32 @@ import {
   Text,
   View,
   type PressableProps,
+  type StyleProp,
+  type ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export const Palette = {
-  background: '#F8F8F1',
+  background: '#F2F5F0',
   card: '#FFFFFF',
-  border: '#E0E5DA',
-  forest: '#365D3D',
-  heading: '#253B2B',
-  text: '#344333',
-  muted: '#687166',
-  softGreen: '#EBF0E4',
-  error: '#A43F32',
+  backgroundElement: '#EAF1EA',
+  border: '#D7E0D7',
+  forest: '#1F6B4A',
+  forestDark: '#0F3D2E',
+  heading: '#12241C',
+  text: '#3E5248',
+  muted: '#6B7C73',
+  softGreen: '#D9EFE4',
+  primarySoft: '#D9EFE4',
+  accent: '#C45C26',
+  accentSoft: '#F8E7DC',
+  warn: '#B86E14',
+  warnSoft: '#F8ECD8',
+  error: '#B83A3A',
+  errorSoft: '#F8E0E0',
+  success: '#1F6B4A',
+  header: '#3A2F28',
+  headerMuted: '#E6D5C3',
 } as const;
 
 export function Screen({ children }: PropsWithChildren) {
@@ -52,8 +65,11 @@ export function PageHeading({
   );
 }
 
-export function Panel({ children }: PropsWithChildren) {
-  return <View style={styles.panel}>{children}</View>;
+export function Panel({
+  children,
+  style,
+}: PropsWithChildren<{ style?: StyleProp<ViewStyle> }>) {
+  return <View style={[styles.panel, style]}>{children}</View>;
 }
 
 export function PrimaryButton({
@@ -146,7 +162,7 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   eyebrow: {
-    color: '#597445',
+    color: Palette.forest,
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 1.2,
@@ -169,7 +185,7 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     backgroundColor: Palette.card,
     borderWidth: 1,
-    borderColor: '#E8EBE2',
+    borderColor: Palette.border,
   },
   button: {
     minHeight: 50,
@@ -184,10 +200,10 @@ const styles = StyleSheet.create({
   secondary: {
     backgroundColor: Palette.softGreen,
     borderWidth: 1,
-    borderColor: '#D8E3CE',
+    borderColor: Palette.border,
   },
   danger: {
-    backgroundColor: '#A43F32',
+    backgroundColor: Palette.error,
   },
   buttonText: {
     color: '#FFFFFF',
@@ -209,7 +225,7 @@ const styles = StyleSheet.create({
     borderRadius: 13,
   },
   errorNotice: {
-    backgroundColor: '#FCEBE8',
+    backgroundColor: Palette.errorSoft,
   },
   infoNotice: {
     backgroundColor: Palette.softGreen,

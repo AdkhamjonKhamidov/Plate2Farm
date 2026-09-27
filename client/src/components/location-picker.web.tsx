@@ -2,8 +2,9 @@ import { APIProvider, Map, Marker, useMap } from '@vis.gl/react-google-maps';
 import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { GOOGLE_MAP_STYLE } from '@/constants/map-style';
+import { Palette } from '@/components/app-ui';
 import type { LocationPickerProps } from '@/components/listing-map.types';
+import { GOOGLE_MAP_STYLE } from '@/constants/map-style';
 
 const MAPS_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY?.trim();
 
@@ -68,7 +69,7 @@ const styles = StyleSheet.create({
     height: 240,
     overflow: 'hidden',
     borderRadius: 22,
-    backgroundColor: '#E8EDDF',
+    backgroundColor: Palette.backgroundElement,
   },
   map: {
     width: '100%',
@@ -80,15 +81,15 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: 24,
     borderRadius: 22,
-    backgroundColor: '#E8EDDF',
+    backgroundColor: Palette.backgroundElement,
   },
   missingTitle: {
-    color: '#253B2B',
+    color: Palette.heading,
     fontSize: 16,
     fontWeight: '800',
   },
   missingText: {
-    color: '#687166',
+    color: Palette.muted,
     fontSize: 13,
     lineHeight: 20,
   },

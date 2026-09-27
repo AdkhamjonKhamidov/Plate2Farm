@@ -10,6 +10,7 @@ import { Platform, StyleSheet, View } from 'react-native';
 
 import { getSupplyPinColor, GOOGLE_MAP_STYLE } from '@/constants/map-style';
 import type { ListingMapProps } from '@/components/listing-map.types';
+import { Palette } from '@/components/app-ui';
 
 const PLATFORM_MAPS_KEY =
   Platform.OS === 'ios'
@@ -166,8 +167,8 @@ export default function ListingMap({
           <Circle
             center={searchCenter}
             radius={searchRadiusMiles * 1609.344}
-            fillColor="rgba(91, 133, 72, 0.12)"
-            strokeColor="rgba(54, 93, 61, 0.7)"
+            fillColor="rgba(31, 107, 74, 0.12)"
+            strokeColor="rgba(31, 107, 74, 0.7)"
             strokeWidth={2}
             tappable={false}
           />
@@ -194,7 +195,7 @@ export default function ListingMap({
             }}
             pinColor={
               listing.id === selectedListingId
-                ? '#365D3D'
+                ? Palette.forest
                 : getSupplyPinColor(listing.category)
             }
             title={listing.title}
@@ -213,7 +214,7 @@ const styles = StyleSheet.create({
     height: 300,
     overflow: 'hidden',
     borderRadius: 24,
-    backgroundColor: '#E8EDDF',
+    backgroundColor: Palette.backgroundElement,
   },
   map: {
     flex: 1,

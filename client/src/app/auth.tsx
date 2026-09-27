@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Palette } from '@/components/app-ui';
 import { BrandMark } from '@/components/brand-mark';
 import { BRAND_NAME, BRAND_TAGLINE } from '@/constants/brand';
 import { useAuth } from '@/providers/auth-provider';
@@ -25,7 +26,9 @@ type AccountType = 'farmer' | 'provider';
 export default function AuthScreen() {
   const router = useRouter();
   const canGoBack = router.canGoBack();
-  const [mode, setMode] = useState<AuthMode>('signIn');
+  const { mode: requestedMode } = useLocalSearchParams<{ mode?: string }>();
+  const [mode, setMode] = useState<AuthMode>(requestedMode === 'signUp' ? 'signUp' : 'signIn');
+  const [previousRequestedMode, setPreviousRequestedMode] = useState(requestedMode);
   const [fullName, setFullName] = useState('');
   const [organizationName, setOrganizationName] = useState('');
   const [accountType, setAccountType] = useState<AccountType>('farmer');
@@ -41,12 +44,17 @@ export default function AuthScreen() {
   const isSignUp = mode === 'signUp';
   const isResetPassword = mode === 'resetPassword';
 
-  const useDemoAccount = async (account: (typeof DEMO_ACCOUNTS)[number]) => {
+  if (requestedMode !== previousRequestedMode) {
+    setPreviousRequestedMode(requestedMode);
+    setMode(requestedMode === 'signUp' ? 'signUp' : 'signIn');
+  }
+
+  const handleDemoAccount = async (account: (typeof DEMO_ACCOUNTS)[number]) => {
     setIsSubmitting(true);
     setNotice('');
     try {
       await signIn(account.email, account.password);
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/dashboard');
     } catch (error) {
       setNoticeKind('error');
       setNotice(error instanceof Error ? error.message : 'Unable to open the demo account.');
@@ -116,11 +124,11 @@ export default function AuthScreen() {
           setNoticeKind('success');
           setNotice('Account created. Check your email to confirm your address, then sign in.');
         } else {
-          router.replace('/(tabs)');
+          router.replace('/(tabs)/dashboard');
         }
       } else {
         await signIn(email, password);
-        router.replace('/(tabs)');
+        router.replace('/(tabs)/dashboard');
       }
     } catch (error) {
       setNoticeKind('error');
@@ -250,7 +258,7 @@ export default function AuthScreen() {
                     maxLength={80}
                     onChangeText={setFullName}
                     placeholder="Alex Green"
-                    placeholderTextColor="#9AA095"
+                    placeholderTextColor={Palette.muted}
                     textContentType="name"
                     value={fullName}
                     style={styles.input}
@@ -266,7 +274,7 @@ export default function AuthScreen() {
                     maxLength={120}
                     onChangeText={setOrganizationName}
                     placeholder="Your farm or business"
-                    placeholderTextColor="#9AA095"
+                    placeholderTextColor={Palette.muted}
                     value={organizationName}
                     style={styles.input}
                   />
@@ -283,7 +291,7 @@ export default function AuthScreen() {
                   maxLength={254}
                   onChangeText={setEmail}
                   placeholder="you@example.com"
-                  placeholderTextColor="#9AA095"
+                  placeholderTextColor={Palette.muted}
                   textContentType="emailAddress"
                   value={email}
                   style={styles.input}
@@ -310,7 +318,7 @@ export default function AuthScreen() {
                     maxLength={128}
                     onChangeText={setPassword}
                     placeholder="Enter your password"
-                    placeholderTextColor="#9AA095"
+                    placeholderTextColor={Palette.muted}
                     secureTextEntry={!showPassword}
                     textContentType={isSignUp ? 'newPassword' : 'password'}
                     value={password}
@@ -341,7 +349,7 @@ export default function AuthScreen() {
                     maxLength={128}
                     onChangeText={setConfirmation}
                     placeholder="Enter your password again"
-                    placeholderTextColor="#9AA095"
+                    placeholderTextColor={Palette.muted}
                     secureTextEntry={!showConfirmation}
                     textContentType="newPassword"
                     value={confirmation}
@@ -399,7 +407,7 @@ export default function AuthScreen() {
                       key={account.email}
                       accessibilityRole="button"
                       disabled={isSubmitting}
-                      onPress={() => void useDemoAccount(account)}
+                      onPress={() => void handleDemoAccount(account)}
                       style={styles.demoButton}>
                       <View>
                         <Text style={styles.demoButtonTitle}>
@@ -430,6 +438,12 @@ export default function AuthScreen() {
               style={styles.privacyLink}>
               <Text style={styles.privacyLinkText}>Privacy notice</Text>
             </Pressable>
+            <Pressable
+              accessibilityRole="link"
+              onPress={() => router.push('/')}
+              style={styles.downloadLink}>
+              <Text style={styles.privacyLinkText}>Get the app</Text>
+            </Pressable>
             <Text style={styles.footerNote}>Together, we can make good food go further.</Text>
           </View>
         </ScrollView>
@@ -441,7 +455,7 @@ export default function AuthScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8F8F1',
+    backgroundColor: Palette.background,
   },
   keyboardAvoidingView: {
     flex: 1,
@@ -464,11 +478,11 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#EBF0E4',
+    backgroundColor: Palette.softGreen,
     marginBottom: 20,
   },
   backButtonText: {
-    color: '#365D3D',
+    color: Palette.forest,
     fontSize: 28,
     lineHeight: 30,
     fontWeight: '500',
@@ -483,12 +497,12 @@ const styles = StyleSheet.create({
     height: 36,
     width: 36,
     borderRadius: 13,
-    backgroundColor: '#E5EFD9',
+    backgroundColor: Palette.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
   brandName: {
-    color: '#253B2B',
+    color: Palette.heading,
     fontSize: 18,
     fontWeight: '800',
     letterSpacing: -0.5,
@@ -498,20 +512,20 @@ const styles = StyleSheet.create({
     marginBottom: 26,
   },
   eyebrow: {
-    color: '#597445',
+    color: Palette.forest,
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 1.3,
   },
   title: {
-    color: '#253B2B',
+    color: Palette.heading,
     fontSize: 34,
     lineHeight: 40,
     fontWeight: '800',
     letterSpacing: -1.2,
   },
   description: {
-    color: '#687166',
+    color: Palette.muted,
     fontSize: 15,
     lineHeight: 22,
   },
@@ -519,7 +533,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 4,
     borderRadius: 15,
-    backgroundColor: '#EBEEE6',
+    backgroundColor: Palette.backgroundElement,
     marginBottom: 22,
   },
   modeButton: {
@@ -530,15 +544,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   modeButtonSelected: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Palette.card,
   },
   modeText: {
-    color: '#697266',
+    color: Palette.muted,
     fontSize: 14,
     fontWeight: '600',
   },
   modeTextSelected: {
-    color: '#365D3D',
+    color: Palette.forest,
     fontWeight: '800',
   },
   form: {
@@ -556,28 +570,28 @@ const styles = StyleSheet.create({
     minHeight: 48,
     paddingHorizontal: 10,
     borderWidth: 1,
-    borderColor: '#E0E5DA',
+    borderColor: Palette.border,
     borderRadius: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Palette.card,
     alignItems: 'center',
     justifyContent: 'center',
   },
   accountTypeButtonSelected: {
-    borderColor: '#365D3D',
-    backgroundColor: '#EBF0E4',
+    borderColor: Palette.forest,
+    backgroundColor: Palette.softGreen,
   },
   accountTypeText: {
-    color: '#697266',
+    color: Palette.muted,
     textAlign: 'center',
     fontSize: 13,
     fontWeight: '600',
   },
   accountTypeTextSelected: {
-    color: '#365D3D',
+    color: Palette.forest,
     fontWeight: '800',
   },
   label: {
-    color: '#344333',
+    color: Palette.text,
     fontSize: 13,
     fontWeight: '700',
   },
@@ -591,18 +605,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   passwordVisibilityText: {
-    color: '#365D3D',
+    color: Palette.forest,
     fontSize: 13,
     fontWeight: '700',
   },
   input: {
     minHeight: 54,
     borderWidth: 1,
-    borderColor: '#E0E5DA',
+    borderColor: Palette.border,
     borderRadius: 15,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Palette.card,
     paddingHorizontal: 16,
-    color: '#253B2B',
+    color: Palette.heading,
     fontSize: 15,
   },
   forgotPasswordButton: {
@@ -610,24 +624,24 @@ const styles = StyleSheet.create({
     marginTop: -6,
   },
   forgotPasswordText: {
-    color: '#365D3D',
+    color: Palette.forest,
     fontSize: 13,
     fontWeight: '700',
   },
   notice: {
-    color: '#597445',
+    color: Palette.forest,
     fontSize: 13,
     lineHeight: 19,
   },
   errorNotice: {
-    color: '#A43F32',
+    color: Palette.error,
     fontSize: 13,
     lineHeight: 19,
   },
   primaryButton: {
     minHeight: 56,
     borderRadius: 18,
-    backgroundColor: '#365D3D',
+    backgroundColor: Palette.forest,
     paddingHorizontal: 20,
     flexDirection: 'row',
     alignItems: 'center',
@@ -642,7 +656,7 @@ const styles = StyleSheet.create({
     opacity: 0.55,
   },
   primaryButtonText: {
-    color: '#FFFFFF',
+    color: Palette.card,
     fontSize: 15,
     fontWeight: '700',
   },
@@ -651,15 +665,15 @@ const styles = StyleSheet.create({
     marginTop: 8,
     padding: 14,
     borderRadius: 18,
-    backgroundColor: '#EBF0E4',
+    backgroundColor: Palette.softGreen,
   },
   demoTitle: {
-    color: '#253B2B',
+    color: Palette.heading,
     fontSize: 14,
     fontWeight: '800',
   },
   demoHelp: {
-    color: '#687166',
+    color: Palette.muted,
     fontSize: 12,
     lineHeight: 18,
   },
@@ -668,28 +682,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 13,
     paddingVertical: 9,
     borderRadius: 13,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Palette.card,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   demoButtonTitle: {
-    color: '#365D3D',
+    color: Palette.forest,
     fontSize: 13,
     fontWeight: '800',
   },
   demoButtonText: {
-    color: '#687166',
+    color: Palette.muted,
     fontSize: 11,
     marginTop: 2,
   },
   demoArrow: {
-    color: '#365D3D',
+    color: Palette.forest,
     fontSize: 19,
     fontWeight: '700',
   },
   buttonArrow: {
-    color: '#FFFFFF',
+    color: Palette.card,
     fontSize: 21,
     fontWeight: '600',
   },
@@ -697,12 +711,12 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   returnButtonText: {
-    color: '#365D3D',
+    color: Palette.forest,
     fontSize: 13,
     fontWeight: '700',
   },
   footerNote: {
-    color: '#7C8277',
+    color: Palette.muted,
     fontSize: 12,
     textAlign: 'center',
     marginTop: 'auto',
@@ -713,8 +727,12 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   privacyLinkText: {
-    color: '#597445',
+    color: Palette.forest,
     fontSize: 13,
     fontWeight: '700',
+  },
+  downloadLink: {
+    alignSelf: 'center',
+    marginTop: 12,
   },
 });

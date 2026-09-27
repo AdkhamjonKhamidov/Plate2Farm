@@ -16,7 +16,7 @@ export function FoodListingCard({
   const pickupEnd = new Date(listing.pickup_ends_at);
 
   return (
-    <Panel>
+    <Panel style={styles.card}>
       <FoodListingArtwork category={listing.category} imageUrl={listing.image_url} />
       <View style={styles.row}>
         <Text style={styles.title}>{listing.title}</Text>
@@ -41,6 +41,11 @@ export function FoodListingCard({
 }
 
 const styles = StyleSheet.create({
+  card: {
+    width: '100%',
+    maxWidth: 460,
+    alignSelf: 'center',
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -60,7 +65,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   provider: {
-    color: '#597445',
+    color: Palette.forest,
     fontSize: 13,
     fontWeight: '700',
   },

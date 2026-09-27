@@ -118,7 +118,7 @@ export default function ExploreScreen() {
     );
   }, []);
 
-  const useMapCenter = () => {
+  const setSearchToMapCenter = () => {
     setLocationError(null);
     setIsLocating(false);
     setUserLocationRequest(0);
@@ -132,7 +132,7 @@ export default function ExploreScreen() {
   const setSearchArea = () => {
     setLocationError(null);
     if (Platform.OS !== 'web') {
-      useMapCenter();
+      setSearchToMapCenter();
       return;
     }
 
@@ -246,7 +246,7 @@ export default function ExploreScreen() {
                   : 'Use my location'}
             </PrimaryButton>
           ) : null}
-          <PrimaryButton variant="secondary" onPress={useMapCenter}>
+          <PrimaryButton variant="secondary" onPress={setSearchToMapCenter}>
             {searchCenter && Platform.OS !== 'web' ? 'Update search area' : 'Use map center'}
           </PrimaryButton>
         </View>
@@ -354,23 +354,23 @@ const styles = StyleSheet.create({
   },
   filter: {
     borderWidth: 1,
-    borderColor: '#DDE4D7',
+    borderColor: Palette.border,
     borderRadius: 20,
     paddingHorizontal: 13,
     paddingVertical: 9,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Palette.card,
   },
   filterSelected: {
-    backgroundColor: '#365D3D',
-    borderColor: '#365D3D',
+    backgroundColor: Palette.forest,
+    borderColor: Palette.forest,
   },
   filterText: {
-    color: '#536151',
+    color: Palette.text,
     fontSize: 12,
     fontWeight: '700',
   },
   filterTextSelected: {
-    color: '#FFFFFF',
+    color: Palette.card,
   },
   listHeading: {
     flexDirection: 'row',
@@ -405,8 +405,11 @@ const styles = StyleSheet.create({
     lineHeight: 19,
   },
   selectedCard: {
+    width: '100%',
+    maxWidth: 460,
+    alignSelf: 'center',
     borderWidth: 2,
-    borderColor: '#86A95D',
+    borderColor: Palette.primarySoft,
     borderRadius: 24,
   },
   emptyTitle: {

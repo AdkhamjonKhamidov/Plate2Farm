@@ -14,11 +14,13 @@ export default function RootLayout() {
       <AuthProvider>
         <AnimatedSplashOverlay />
         <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="auth" />
           <Stack.Screen name="auth-callback" />
           <Stack.Screen name="listing/new" />
           <Stack.Screen name="privacy" />
+          <Stack.Screen name="download" />
         </Stack>
       </AuthProvider>
     </ThemeProvider>
