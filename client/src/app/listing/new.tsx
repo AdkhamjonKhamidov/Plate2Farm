@@ -34,6 +34,7 @@ const units: FoodUnit[] = ['items', 'kg', 'lb', 'boxes', 'bags', 'meals'];
 
 export default function NewListingScreen() {
   const router = useRouter();
+  const canGoBack = router.canGoBack();
   const { profile } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -248,9 +249,17 @@ export default function NewListingScreen() {
       <PrimaryButton disabled={isSaving} onPress={() => void handleSubmit()}>
         {isSaving ? 'Publishing…' : 'Publish food listing'}
       </PrimaryButton>
-      <PrimaryButton variant="secondary" onPress={() => router.back()}>
-        Go back
-      </PrimaryButton>
+      {canGoBack ? (
+        <PrimaryButton
+          variant="secondary"
+          onPress={() => {
+            if (router.canGoBack()) {
+              router.back();
+            }
+          }}>
+          Go back
+        </PrimaryButton>
+      ) : null}
     </Screen>
   );
 }

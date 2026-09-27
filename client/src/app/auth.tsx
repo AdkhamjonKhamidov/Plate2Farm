@@ -23,6 +23,7 @@ type AccountType = 'farmer' | 'provider';
 
 export default function AuthScreen() {
   const router = useRouter();
+  const canGoBack = router.canGoBack();
   const [mode, setMode] = useState<AuthMode>('signIn');
   const [fullName, setFullName] = useState('');
   const [organizationName, setOrganizationName] = useState('');
@@ -111,13 +112,19 @@ export default function AuthScreen() {
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled">
           <View style={styles.formContainer}>
-            <Pressable
-              accessibilityLabel="Back to home"
-              accessibilityRole="button"
-              onPress={() => router.back()}
-              style={styles.backButton}>
-              <Text style={styles.backButtonText}>‹</Text>
-            </Pressable>
+            {canGoBack ? (
+              <Pressable
+                accessibilityLabel="Back"
+                accessibilityRole="button"
+                onPress={() => {
+                  if (router.canGoBack()) {
+                    router.back();
+                  }
+                }}
+                style={styles.backButton}>
+                <Text style={styles.backButtonText}>‹</Text>
+              </Pressable>
+            ) : null}
             <View style={styles.brand}>
               <View style={styles.brandMark}>
                 <BrandMark size={38} />

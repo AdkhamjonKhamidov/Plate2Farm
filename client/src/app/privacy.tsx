@@ -34,18 +34,25 @@ const sections = [
 
 export default function PrivacyScreen() {
   const router = useRouter();
+  const canGoBack = router.canGoBack();
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.container}>
-          <Pressable
-            accessibilityLabel="Back"
-            accessibilityRole="button"
-            onPress={() => router.back()}
-            style={styles.backButton}>
-            <Text style={styles.backButtonText}>‹</Text>
-          </Pressable>
+          {canGoBack ? (
+            <Pressable
+              accessibilityLabel="Back"
+              accessibilityRole="button"
+              onPress={() => {
+                if (router.canGoBack()) {
+                  router.back();
+                }
+              }}
+              style={styles.backButton}>
+              <Text style={styles.backButtonText}>‹</Text>
+            </Pressable>
+          ) : null}
 
           <View style={styles.brand}>
             <View style={styles.brandMark}>

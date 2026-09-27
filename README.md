@@ -60,7 +60,45 @@ npx expo start
 
 Use the Expo terminal shortcuts to open web, Android, or iOS. On a physical iPhone, scan the QR code using Expo Go and ensure the phone and development computer can reach the same network.
 
-## 4. Add demo listings
+## 4. Deploy the web app to Vercel
+
+The Expo web app is a static export. To deploy it:
+
+1. Push the project to GitHub, then import the repository in Vercel.
+2. Set Vercel's **Root Directory** to `client`.
+3. Use `npm run build:web` as the **Build Command** and `dist` as the **Output Directory**. Vercel can use the default install command (`npm install`).
+4. Add these environment variables in Vercel for the Production environment, and Preview too if you want preview deployments to connect to Supabase:
+
+   | Variable | Value |
+   | --- | --- |
+   | `EXPO_PUBLIC_SUPABASE_URL` | Your Supabase project URL |
+   | `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Your Supabase publishable key |
+   | `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` | Your browser-restricted Google Maps JavaScript API key |
+
+   These `EXPO_PUBLIC_` values are included in the browser bundle. Never use a Supabase secret or service-role key here.
+5. Deploy, then add `leftover.health` and `www.leftover.health` under the Vercel project's **Settings > Domains**. Vercel will show the DNS records it expects.
+6. In the DNS provider that manages the domain's active nameservers (Porkbun, if its nameservers are active), add the records Vercel displays. Do not change nameservers or delete existing records to make room; review conflicts first. Keep Resend's email DNS records, which are separate from the website records.
+7. In Supabase **Authentication > URL Configuration**, set the **Site URL** to `https://leftover.health` and add `https://leftover.health/**` and `https://www.leftover.health/**` to the redirect URL allow list. Keep the `leftover://auth-callback` redirect for the native app.
+8. Restrict the Google Maps browser key to the deployed web origins (`https://leftover.health/*` and `https://www.leftover.health/*`) and enable the Maps JavaScript API. If local web development also uses this key, keep its local origin allowed.
+
+After DNS propagates and Vercel verifies both domains, test sign-up, email confirmation, password reset, and map loading from the deployed HTTPS site.
+
+### Configure Resend for Supabase Auth email
+
+In Resend, verify a sending subdomain such as `auth.leftover.health` and add the DNS records Resend gives you at the provider managing the active nameservers. Then, in Supabase **Authentication > Email > SMTP Settings**, enable custom SMTP and enter:
+
+| Setting | Value |
+| --- | --- |
+| Sender email | `no-reply@auth.leftover.health` |
+| Sender name | `Plate2Farm` |
+| Host | `smtp.resend.com` |
+| Port | `465` |
+| Username | `resend` |
+| Password | Your Resend SMTP/API key |
+
+Save the settings and send a test confirmation or password-reset email. Keep the Resend key only in Supabase SMTP settings; never put it in the app or commit it to the repository. DNS records for `auth.leftover.health` are separate from Vercel's website records, so preserve both sets.
+
+## 5. Add demo listings
 
 After the migrations have run and at least one provider account exists:
 
@@ -71,7 +109,7 @@ The script adds five clearly labeled listings near Columbus, Ohio, for each prov
 
 **A provider account is required before running this script.** Each listing must belong to a real provider profile linked to an authenticated Supabase user. Create a provider account through the app first; the script deliberately does not create or bypass authentication users.
 
-## 5. Try both account types
+## 6. Try both account types
 
 Use separate email addresses for the provider and farmer accounts. Confirm each email if Supabase requires it.
 
