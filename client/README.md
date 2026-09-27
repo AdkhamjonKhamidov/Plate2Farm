@@ -38,5 +38,8 @@ You can also start the same Expo server with `npm start`.
 
 - The landing screen adapts between compact and wide screens and scrolls when its content needs more room.
 - Replace the logo and hero image through `src/constants/brand.ts`; see `assets/branding/README.md` for the asset workflow.
-- The sign-in, sign-up, and password-reset forms are frontend structure only. No Supabase client or authentication calls are connected yet. Sign-up form values are shaped for a future Supabase `signUp` call, including `full_name` user metadata.
+- The sign-in, sign-up, and password-reset forms are frontend structure only. No Supabase client or authentication calls are connected yet. Signup collects `full_name`, `organization_name`, and an `account_type` for a future Supabase `signUp` call.
+- Supabase database migration, role-based row-level security, and setup instructions are in `../supabase/`.
+- The privacy notice is a draft at `src/app/privacy.tsx`; add a privacy contact and establish retention/deletion practices before public launch.
+- Copy `.env.example` to `.env` only when configuring Supabase; use the project URL and publishable key, never a service-role secret.
 - Type-check with `npx tsc --noEmit` and lint with `npm run lint`.

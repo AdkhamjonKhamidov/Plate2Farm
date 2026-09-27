@@ -53,6 +53,12 @@ export default function HomeScreen() {
                 <Text style={styles.primaryButtonText}>Get started</Text>
                 <Text style={styles.buttonArrow}>→</Text>
               </Pressable>
+              <Pressable
+                accessibilityRole="link"
+                onPress={() => router.push('/privacy')}
+                style={styles.privacyLink}>
+                <Text style={styles.privacyLinkText}>Privacy notice</Text>
+              </Pressable>
             </View>
           </View>
         </View>
@@ -169,6 +175,15 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     color: '#FFFFFF',
     fontSize: 17,
+    fontWeight: '700',
+  },
+  privacyLink: {
+    alignSelf: 'center',
+    paddingVertical: 6,
+  },
+  privacyLinkText: {
+    color: '#597445',
+    fontSize: 14,
     fontWeight: '700',
   },
   buttonArrow: {

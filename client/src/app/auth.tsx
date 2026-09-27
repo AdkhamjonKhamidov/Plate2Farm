@@ -16,11 +16,14 @@ import { BrandMark } from '@/components/brand-mark';
 import { BRAND_NAME, BRAND_TAGLINE } from '@/constants/brand';
 
 type AuthMode = 'signIn' | 'signUp' | 'resetPassword';
+type AccountType = 'farmer' | 'provider';
 
 export default function AuthScreen() {
   const router = useRouter();
   const [mode, setMode] = useState<AuthMode>('signIn');
   const [fullName, setFullName] = useState('');
+  const [organizationName, setOrganizationName] = useState('');
+  const [accountType, setAccountType] = useState<AccountType>('farmer');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [notice, setNotice] = useState('');
@@ -107,6 +110,45 @@ export default function AuthScreen() {
             <View style={styles.form}>
               {isSignUp && (
                 <View style={styles.fieldGroup}>
+                  <Text style={styles.label}>I am joining as</Text>
+                  <View style={styles.accountTypePicker}>
+                    <Pressable
+                      accessibilityRole="radio"
+                      accessibilityState={{ selected: accountType === 'farmer' }}
+                      onPress={() => setAccountType('farmer')}
+                      style={[
+                        styles.accountTypeButton,
+                        accountType === 'farmer' && styles.accountTypeButtonSelected,
+                      ]}>
+                      <Text
+                        style={[
+                          styles.accountTypeText,
+                          accountType === 'farmer' && styles.accountTypeTextSelected,
+                        ]}>
+                        Farmer
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      accessibilityRole="radio"
+                      accessibilityState={{ selected: accountType === 'provider' }}
+                      onPress={() => setAccountType('provider')}
+                      style={[
+                        styles.accountTypeButton,
+                        accountType === 'provider' && styles.accountTypeButtonSelected,
+                      ]}>
+                      <Text
+                        style={[
+                          styles.accountTypeText,
+                          accountType === 'provider' && styles.accountTypeTextSelected,
+                        ]}>
+                        Restaurant / grocery
+                      </Text>
+                    </Pressable>
+                  </View>
+                </View>
+              )}
+              {isSignUp && (
+                <View style={styles.fieldGroup}>
                   <Text style={styles.label}>Full name</Text>
                   <TextInput
                     accessibilityLabel="Full name"
@@ -117,6 +159,20 @@ export default function AuthScreen() {
                     placeholderTextColor="#9AA095"
                     textContentType="name"
                     value={fullName}
+                    style={styles.input}
+                  />
+                </View>
+              )}
+              {isSignUp && (
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.label}>Farm or organization name (optional)</Text>
+                  <TextInput
+                    accessibilityLabel="Farm or organization name"
+                    autoCapitalize="words"
+                    onChangeText={setOrganizationName}
+                    placeholder="Your farm or business"
+                    placeholderTextColor="#9AA095"
+                    value={organizationName}
                     style={styles.input}
                   />
                 </View>
@@ -182,6 +238,12 @@ export default function AuthScreen() {
               )}
             </View>
 
+            <Pressable
+              accessibilityRole="link"
+              onPress={() => router.push('/privacy')}
+              style={styles.privacyLink}>
+              <Text style={styles.privacyLinkText}>Privacy notice</Text>
+            </Pressable>
             <Text style={styles.footerNote}>Together, we can make good food go further.</Text>
           </View>
         </ScrollView>
@@ -299,6 +361,35 @@ const styles = StyleSheet.create({
   fieldGroup: {
     gap: 8,
   },
+  accountTypePicker: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  accountTypeButton: {
+    flex: 1,
+    minHeight: 48,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#E0E5DA',
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  accountTypeButtonSelected: {
+    borderColor: '#365D3D',
+    backgroundColor: '#EBF0E4',
+  },
+  accountTypeText: {
+    color: '#697266',
+    textAlign: 'center',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  accountTypeTextSelected: {
+    color: '#365D3D',
+    fontWeight: '800',
+  },
   label: {
     color: '#344333',
     fontSize: 13,
@@ -366,5 +457,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 'auto',
     paddingTop: 32,
+  },
+  privacyLink: {
+    alignSelf: 'center',
+    marginTop: 24,
+  },
+  privacyLinkText: {
+    color: '#597445',
+    fontSize: 13,
+    fontWeight: '700',
   },
 });
