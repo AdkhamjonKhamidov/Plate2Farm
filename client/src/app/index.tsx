@@ -53,15 +53,27 @@ export default function LandingScreen() {
                 Leftover brings food providers and local farmers together to make surplus food go
                 further.
               </Text>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() =>
-                  router.push({ pathname: '/auth', params: { mode: 'signUp' } })
-                }
-                style={({ pressed }) => [styles.joinButton, pressed && styles.pressed]}>
-                <Text style={styles.joinButtonText}>Create your free account</Text>
-                <Text style={styles.joinArrow}>→</Text>
-              </Pressable>
+              <View style={[styles.heroActions, isWide && styles.heroActionsWide]}>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => router.push('/presentation')}
+                  style={({ pressed }) => [
+                    styles.demoButton,
+                    isWide && styles.demoButtonWide,
+                    pressed && styles.pressed,
+                  ]}>
+                  <Text style={styles.demoButtonText}>View demo</Text>
+                  <Text style={styles.demoArrow}>→</Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() =>
+                    router.push({ pathname: '/auth', params: { mode: 'signUp' } })
+                  }
+                  style={({ pressed }) => [styles.joinButton, pressed && styles.pressed]}>
+                  <Text style={styles.joinButtonText}>Create your free account</Text>
+                </Pressable>
+              </View>
             </View>
             {isWide ? (
               <Image
@@ -202,7 +214,15 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     maxWidth: 500,
   },
-  joinButton: {
+  heroActions: {
+    gap: 10,
+    marginTop: 3,
+  },
+  heroActionsWide: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  demoButton: {
     minHeight: 54,
     maxWidth: 320,
     borderRadius: 16,
@@ -211,17 +231,41 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 3,
+    gap: 24,
+    shadowColor: Palette.forestDark,
+    shadowOpacity: 0.16,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 3,
+  },
+  demoButtonWide: {
+    maxWidth: 220,
+  },
+  joinButton: {
+    minHeight: 54,
+    maxWidth: 320,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: Palette.forest,
+    backgroundColor: 'transparent',
+    paddingHorizontal: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   pressed: {
     opacity: 0.82,
   },
   joinButtonText: {
-    color: Palette.card,
+    color: Palette.forest,
     fontSize: 14,
+    fontWeight: '700',
+  },
+  demoButtonText: {
+    color: Palette.card,
+    fontSize: 15,
     fontWeight: '800',
   },
-  joinArrow: {
+  demoArrow: {
     color: Palette.card,
     fontSize: 20,
     fontWeight: '600',
