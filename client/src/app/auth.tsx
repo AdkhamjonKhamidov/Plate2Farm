@@ -1,7 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -13,15 +12,32 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-type AuthMode = 'signIn' | 'signUp';
+import { BrandMark } from '@/components/brand-mark';
+import { BRAND_NAME, BRAND_TAGLINE } from '@/constants/brand';
+
+type AuthMode = 'signIn' | 'signUp' | 'resetPassword';
 
 export default function AuthScreen() {
   const router = useRouter();
   const [mode, setMode] = useState<AuthMode>('signIn');
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [notice, setNotice] = useState('');
   const isSignUp = mode === 'signUp';
+  const isResetPassword = mode === 'resetPassword';
+
+  const selectMode = (nextMode: AuthMode) => {
+    setMode(nextMode);
+    setNotice('');
+  };
 
   const handleSubmit = () => {
-    Alert.alert('Authentication unavailable', 'Sign in and account creation are not connected yet.');
+    setNotice(
+      isResetPassword
+        ? 'Password recovery will be available once authentication is connected.'
+        : 'Account access will be available once authentication is connected.',
+    );
   };
 
   return (
@@ -29,96 +45,145 @@ export default function AuthScreen() {
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardAvoidingView}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <Pressable
-            accessibilityLabel="Back to home"
-            accessibilityRole="button"
-            onPress={() => router.back()}
-            style={styles.backButton}>
-            <Text style={styles.backButtonText}>‹</Text>
-          </Pressable>
-          <View style={styles.brand}>
-            <View style={styles.brandMark}>
-              <Text style={styles.brandMarkText}>🌱</Text>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled">
+          <View style={styles.formContainer}>
+            <Pressable
+              accessibilityLabel="Back to home"
+              accessibilityRole="button"
+              onPress={() => router.back()}
+              style={styles.backButton}>
+              <Text style={styles.backButtonText}>‹</Text>
+            </Pressable>
+            <View style={styles.brand}>
+              <View style={styles.brandMark}>
+                <BrandMark size={38} />
+              </View>
+              <Text style={styles.brandName}>{BRAND_NAME}</Text>
             </View>
-            <Text style={styles.brandName}>Plate2Farm</Text>
-          </View>
 
-          <View style={styles.intro}>
-            <Text style={styles.eyebrow}>GOOD FOOD. LESS WASTE.</Text>
-            <Text style={styles.title}>{isSignUp ? 'Join the good' : 'Welcome back'}</Text>
-            <Text style={styles.description}>
-              {isSignUp
-                ? 'Create an account and help good food find its next home.'
-                : 'Sign in to continue making good food go further.'}
-            </Text>
-          </View>
+            <View style={styles.intro}>
+              <Text style={styles.eyebrow}>{BRAND_TAGLINE.toUpperCase()}</Text>
+              <Text style={styles.title}>
+                {isResetPassword
+                  ? 'Reset your password'
+                  : isSignUp
+                    ? 'Join the good'
+                    : 'Welcome back'}
+              </Text>
+              <Text style={styles.description}>
+                {isResetPassword
+                  ? 'Enter the email address connected to your account.'
+                  : isSignUp
+                    ? 'Create an account and help good food find its next home.'
+                    : 'Sign in to continue making good food go further.'}
+              </Text>
+            </View>
 
-          <View style={styles.modePicker}>
-            <Pressable
-              accessibilityRole="tab"
-              accessibilityState={{ selected: !isSignUp }}
-              onPress={() => setMode('signIn')}
-              style={[styles.modeButton, !isSignUp && styles.modeButtonSelected]}>
-              <Text style={[styles.modeText, !isSignUp && styles.modeTextSelected]}>Sign in</Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="tab"
-              accessibilityState={{ selected: isSignUp }}
-              onPress={() => setMode('signUp')}
-              style={[styles.modeButton, isSignUp && styles.modeButtonSelected]}>
-              <Text style={[styles.modeText, isSignUp && styles.modeTextSelected]}>Sign up</Text>
-            </Pressable>
-          </View>
+            {!isResetPassword && (
+              <View style={styles.modePicker} accessibilityRole="tablist">
+                <Pressable
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: !isSignUp }}
+                  onPress={() => selectMode('signIn')}
+                  style={[styles.modeButton, !isSignUp && styles.modeButtonSelected]}>
+                  <Text style={[styles.modeText, !isSignUp && styles.modeTextSelected]}>
+                    Sign in
+                  </Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: isSignUp }}
+                  onPress={() => selectMode('signUp')}
+                  style={[styles.modeButton, isSignUp && styles.modeButtonSelected]}>
+                  <Text style={[styles.modeText, isSignUp && styles.modeTextSelected]}>
+                    Sign up
+                  </Text>
+                </Pressable>
+              </View>
+            )}
 
-          <View style={styles.form}>
-            {isSignUp && (
+            <View style={styles.form}>
+              {isSignUp && (
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.label}>Full name</Text>
+                  <TextInput
+                    accessibilityLabel="Full name"
+                    autoComplete="name"
+                    autoCapitalize="words"
+                    onChangeText={setFullName}
+                    placeholder="Alex Green"
+                    placeholderTextColor="#9AA095"
+                    textContentType="name"
+                    value={fullName}
+                    style={styles.input}
+                  />
+                </View>
+              )}
               <View style={styles.fieldGroup}>
-                <Text style={styles.label}>Your name</Text>
+                <Text style={styles.label}>Email address</Text>
                 <TextInput
-                  autoComplete="name"
-                  autoCapitalize="words"
-                  placeholder="Alex Green"
+                  accessibilityLabel="Email address"
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="email-address"
+                  onChangeText={setEmail}
+                  placeholder="you@example.com"
                   placeholderTextColor="#9AA095"
+                  textContentType="emailAddress"
+                  value={email}
                   style={styles.input}
                 />
               </View>
-            )}
-            <View style={styles.fieldGroup}>
-              <Text style={styles.label}>Email address</Text>
-              <TextInput
-                autoComplete="email"
-                autoCapitalize="none"
-                keyboardType="email-address"
-                placeholder="you@example.com"
-                placeholderTextColor="#9AA095"
-                style={styles.input}
-              />
+              {!isResetPassword && (
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.label}>Password</Text>
+                  <TextInput
+                    accessibilityLabel="Password"
+                    autoComplete={isSignUp ? 'new-password' : 'current-password'}
+                    autoCapitalize="none"
+                    onChangeText={setPassword}
+                    placeholder="Enter your password"
+                    placeholderTextColor="#9AA095"
+                    secureTextEntry
+                    textContentType={isSignUp ? 'newPassword' : 'password'}
+                    value={password}
+                    style={styles.input}
+                  />
+                </View>
+              )}
+              {!isSignUp && !isResetPassword && (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => selectMode('resetPassword')}
+                  style={styles.forgotPasswordButton}>
+                  <Text style={styles.forgotPasswordText}>Forgot password?</Text>
+                </Pressable>
+              )}
+              {notice ? <Text style={styles.notice}>{notice}</Text> : null}
+              <Pressable
+                accessibilityRole="button"
+                onPress={handleSubmit}
+                style={({ pressed }) => [styles.primaryButton, pressed && styles.buttonPressed]}>
+                <Text style={styles.primaryButtonText}>
+                  {isResetPassword ? 'Send reset link' : isSignUp ? 'Create account' : 'Sign in'}
+                </Text>
+                <Text style={styles.buttonArrow}>→</Text>
+              </Pressable>
+              {isResetPassword && (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => selectMode('signIn')}
+                  style={styles.returnButton}>
+                  <Text style={styles.returnButtonText}>Back to sign in</Text>
+                </Pressable>
+              )}
             </View>
-            <View style={styles.fieldGroup}>
-              <Text style={styles.label}>Password</Text>
-              <TextInput
-                autoComplete={isSignUp ? 'new-password' : 'current-password'}
-                placeholder="Enter your password"
-                placeholderTextColor="#9AA095"
-                secureTextEntry
-                style={styles.input}
-              />
-            </View>
-            <Pressable
-              accessibilityRole="button"
-              onPress={handleSubmit}
-              style={({ pressed }) => [styles.primaryButton, pressed && styles.buttonPressed]}>
-              <Text style={styles.primaryButtonText}>
-                {isSignUp ? 'Create account' : 'Sign in'}
-              </Text>
-              <Text style={styles.buttonArrow}>→</Text>
-            </Pressable>
-          </View>
 
-          <Text style={styles.footerNote}>
-            Together, we can make good food go further.
-          </Text>
+            <Text style={styles.footerNote}>Together, we can make good food go further.</Text>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -139,6 +204,12 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 28,
   },
+  formContainer: {
+    width: '100%',
+    maxWidth: 480,
+    alignSelf: 'center',
+    flex: 1,
+  },
   backButton: {
     width: 42,
     height: 42,
@@ -158,7 +229,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 9,
-    marginBottom: 34,
+    marginBottom: 30,
   },
   brandMark: {
     height: 36,
@@ -168,9 +239,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  brandMarkText: {
-    fontSize: 19,
-  },
   brandName: {
     color: '#253B2B',
     fontSize: 18,
@@ -179,7 +247,7 @@ const styles = StyleSheet.create({
   },
   intro: {
     gap: 10,
-    marginBottom: 28,
+    marginBottom: 26,
   },
   eyebrow: {
     color: '#597445',
@@ -204,7 +272,7 @@ const styles = StyleSheet.create({
     padding: 4,
     borderRadius: 15,
     backgroundColor: '#EBEEE6',
-    marginBottom: 24,
+    marginBottom: 22,
   },
   modeButton: {
     flex: 1,
@@ -226,7 +294,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   form: {
-    gap: 18,
+    gap: 17,
   },
   fieldGroup: {
     gap: 8,
@@ -246,6 +314,20 @@ const styles = StyleSheet.create({
     color: '#253B2B',
     fontSize: 15,
   },
+  forgotPasswordButton: {
+    alignSelf: 'flex-end',
+    marginTop: -6,
+  },
+  forgotPasswordText: {
+    color: '#365D3D',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  notice: {
+    color: '#597445',
+    fontSize: 13,
+    lineHeight: 19,
+  },
   primaryButton: {
     minHeight: 56,
     borderRadius: 18,
@@ -254,7 +336,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 6,
+    marginTop: 2,
   },
   buttonPressed: {
     opacity: 0.82,
@@ -269,6 +351,14 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 21,
     fontWeight: '600',
+  },
+  returnButton: {
+    alignSelf: 'center',
+  },
+  returnButtonText: {
+    color: '#365D3D',
+    fontSize: 13,
+    fontWeight: '700',
   },
   footerNote: {
     color: '#7C8277',

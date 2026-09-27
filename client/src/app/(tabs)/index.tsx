@@ -1,80 +1,60 @@
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { BrandMark } from '@/components/brand-mark';
+import { BRAND_HERO_ACCESSIBILITY_LABEL, BRAND_IMAGES, BRAND_NAME } from '@/constants/brand';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { height, width } = useWindowDimensions();
+  const isWide = width >= 820;
+  const imageHeight = isWide
+    ? Math.min(height * 0.62, 560)
+    : Math.max(190, Math.min(height * 0.28, 320));
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <View style={styles.brand}>
-            <View style={styles.brandMark}>
-              <Text style={styles.brandMarkText}>🌱</Text>
+        <View style={[styles.content, width >= 1200 && styles.contentWide]}>
+          <View style={styles.header}>
+            <View style={styles.brand}>
+              <View style={styles.brandMark}>
+                <BrandMark size={38} />
+              </View>
+              <Text style={styles.brandName}>{BRAND_NAME}</Text>
             </View>
-            <Text style={styles.brandName}>Plate2Farm</Text>
           </View>
-          <View style={styles.nonprofitBadge}>
-            <Text style={styles.nonprofitBadgeText}>A food-waste nonprofit</Text>
-          </View>
-        </View>
 
-        <View style={styles.hero}>
-          <View style={styles.photoCard}>
+          <View style={[styles.hero, isWide && styles.heroWide]}>
             <Image
-              accessibilityLabel="Fresh produce ready to be shared"
+              accessibilityLabel={BRAND_HERO_ACCESSIBILITY_LABEL}
               contentFit="cover"
-              source={{
-                uri: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=85',
-              }}
-              style={StyleSheet.absoluteFill}
+              source={BRAND_IMAGES.hero}
+              style={[styles.heroImage, isWide && styles.heroImageWide, { height: imageHeight }]}
               transition={250}
             />
-            <View style={styles.photoShade} />
-            <View style={styles.photoTag}>
-              <Text style={styles.photoTagText}>FROM PLATE TO FARM</Text>
-            </View>
-            <View style={styles.photoCaption}>
-              <View style={styles.captionIcon}>
-                <Text style={styles.captionIconText}>🌾</Text>
-              </View>
-              <View style={styles.captionCopy}>
-                <Text style={styles.captionTitle}>Nothing goes to waste</Text>
-                <Text style={styles.captionDescription}>Good food finds a new purpose</Text>
-              </View>
+
+            <View style={[styles.heroCopy, isWide && styles.heroCopyWide]}>
+              <Text style={[styles.headline, isWide && styles.headlineWide]}>
+                Leftovers,{' '}
+                <Text style={styles.headlineAccent}>made good.</Text>
+              </Text>
+              <Text style={styles.description}>
+                Good food deserves another chance.
+              </Text>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => router.push('/auth')}
+                style={({ pressed }) => [styles.primaryButton, pressed && styles.buttonPressed]}>
+                <Text style={styles.primaryButtonText}>Get started</Text>
+                <Text style={styles.buttonArrow}>→</Text>
+              </Pressable>
             </View>
           </View>
-
-          <View style={styles.heroCopy}>
-            <View style={styles.eyebrow}>
-              <View style={styles.eyebrowDot} />
-              <Text style={styles.eyebrowText}>GOOD FOOD. LESS WASTE.</Text>
-            </View>
-            <Text style={styles.headline}>
-              Good food deserves a <Text style={styles.headlineAccent}>second home.</Text>
-            </Text>
-            <Text style={styles.description}>
-              We connect restaurant surplus with local farms, keeping good food in the loop.
-            </Text>
-          </View>
-
-          <View style={styles.impactCard}>
-            <Text style={styles.impactIcon}>♻️</Text>
-            <Text style={styles.impactText}>Better for food, farms, and our planet.</Text>
-          </View>
-
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => router.push('/auth')}
-            style={({ pressed }) => [styles.primaryButton, pressed && styles.buttonPressed]}>
-            <Text style={styles.primaryButtonText}>Get started</Text>
-            <Text style={styles.buttonArrow}>→</Text>
-          </Pressable>
-          <Text style={styles.footerNote}>Join us in making good food go further.</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -86,172 +66,98 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8F8F1',
   },
-  content: {
+  scrollContent: {
     flexGrow: 1,
+    alignItems: 'center',
+    paddingBottom: 20,
+  },
+  content: {
+    flex: 1,
+    width: '100%',
+    maxWidth: 1440,
     paddingHorizontal: 22,
-    paddingBottom: 28,
+  },
+  contentWide: {
+    paddingHorizontal: 48,
   },
   header: {
-    paddingTop: 12,
-    paddingBottom: 22,
+    minHeight: 72,
+    paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
   },
   brand: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 9,
+    gap: 10,
   },
   brandMark: {
-    height: 36,
-    width: 36,
-    borderRadius: 13,
+    height: 42,
+    width: 42,
+    borderRadius: 15,
     backgroundColor: '#E5EFD9',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  brandMarkText: {
-    fontSize: 19,
-  },
   brandName: {
     color: '#253B2B',
-    fontSize: 18,
+    fontSize: 21,
     fontWeight: '800',
     letterSpacing: -0.5,
   },
-  nonprofitBadge: {
-    borderWidth: 1,
-    borderColor: '#DDE5D6',
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-  },
-  nonprofitBadgeText: {
-    color: '#61715B',
-    fontSize: 10,
-    fontWeight: '700',
-  },
   hero: {
     flex: 1,
-    gap: 20,
+    justifyContent: 'center',
+    gap: 28,
+    paddingVertical: 16,
   },
-  photoCard: {
+  heroWide: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 56,
+  },
+  heroImage: {
     width: '100%',
-    height: 290,
-    overflow: 'hidden',
     borderRadius: 28,
     backgroundColor: '#D8E2CD',
-    justifyContent: 'space-between',
-    padding: 15,
   },
-  photoShade: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(28, 47, 29, 0.12)',
-  },
-  photoTag: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 11,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.93)',
-  },
-  photoTagText: {
-    color: '#405641',
-    fontSize: 9,
-    fontWeight: '800',
-    letterSpacing: 1,
-  },
-  photoCaption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 11,
-    padding: 12,
-    borderRadius: 17,
-    backgroundColor: 'rgba(255,255,255,0.95)',
-  },
-  captionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 13,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#EEF3E8',
-  },
-  captionIconText: {
-    fontSize: 20,
-  },
-  captionCopy: {
-    flex: 1,
-    gap: 3,
-  },
-  captionTitle: {
-    color: '#2D422F',
-    fontSize: 13,
-    fontWeight: '800',
-  },
-  captionDescription: {
-    color: '#798174',
-    fontSize: 11,
+  heroImageWide: {
+    width: '48%',
+    flexShrink: 0,
+    borderRadius: 36,
   },
   heroCopy: {
-    gap: 11,
+    gap: 18,
+    paddingBottom: 8,
   },
-  eyebrow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  eyebrowDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#6D963F',
-  },
-  eyebrowText: {
-    color: '#597445',
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 1.3,
+  heroCopyWide: {
+    flex: 1,
+    gap: 24,
   },
   headline: {
     color: '#253B2B',
-    fontSize: 36,
-    lineHeight: 42,
+    fontSize: 42,
+    lineHeight: 49,
     fontWeight: '800',
-    letterSpacing: -1.5,
+    letterSpacing: -1.6,
+  },
+  headlineWide: {
+    fontSize: 58,
+    lineHeight: 66,
   },
   headlineAccent: {
     color: '#699344',
   },
   description: {
     color: '#687166',
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  impactCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    padding: 14,
-    borderRadius: 16,
-    backgroundColor: '#EBF0E4',
-  },
-  impactIcon: {
     fontSize: 18,
-  },
-  impactText: {
-    flex: 1,
-    color: '#4D6447',
-    fontSize: 13,
-    fontWeight: '700',
+    lineHeight: 27,
   },
   primaryButton: {
-    minHeight: 56,
+    minHeight: 60,
     borderRadius: 18,
     backgroundColor: '#365D3D',
-    paddingHorizontal: 20,
+    paddingHorizontal: 22,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -262,17 +168,12 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 17,
     fontWeight: '700',
   },
   buttonArrow: {
     color: '#FFFFFF',
-    fontSize: 21,
+    fontSize: 24,
     fontWeight: '600',
-  },
-  footerNote: {
-    color: '#7C8277',
-    fontSize: 12,
-    textAlign: 'center',
   },
 });
